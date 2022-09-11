@@ -1,55 +1,117 @@
 /* eslint-disable */
 const OUTER_DIV_CLASSNAME = 'scrollpage-outer'
 const INNER_DIV_CLASSNAME = 'scrollpage-inner'
-const SCROLLING_CLASSNAME = 'scrolling'
 
 const timefunc = {
   inert: 'cubic-bezier(.17,.67,.83,.67)',
   bounce: 'cubic-bezier(0.68,-0.55,0.27,1.55)',
 }
 
+const defaultOptions = {
+  horizontal: false,
+  timefunc: timefunc.bounce,
+  duration: 1000,
+  delay: 0
+}
+
+const scrollpage = {
+  root: null,
+  selector: null,
+  anchors: null,
+  views: [],
+  currentViewIndex: 0,
+  options: null,
+  scrollNext: scrollNext,
+  scrollBack: scrollBack,
+  scroll: scroll,
+  get current() { return this.views[this.currentViewIndex] },
+}
+
 class ScrollpageError extends Error {
   constructor(message) {
     super(message)
-    this.name ='ScrollViewError'
+    this.name = 'ScrollViewError'
   }
 }
 
-function scrollForward() {
+function scrollNext() {
+  console.log('NEXT')
+  if (scrollpage.currentViewIndex < scrollpage.views.length - 1) {
+    scroll(scrollpage.currentViewIndex+1)
+  }
+  
   
 }
 
-function scrollBackward() {
-  
+function scrollBack() {
+  console.log('BACK')
+  if (scrollpage.currentViewIndex > 0)
+    scroll(scrollpage.currentViewIndex-1) 
 }
 
-function scrollTo(scrollpage, options, index) {
-  let dx = 0;
-  inner.style.setProperty('--dx', dx)
-  inner.style.setProperty('--dy', dy)
+function scroll(to) {
+  let dx = 0.0
+  let dy = 0.0
+
+  let index = 0
+
+  if (typeof to == 'string') {
+    index = anchors.indexOf(to.replace('#', ''))
+    if (index === -1)
+      throw new ScrollpageError(`No such view: ${to}!`)
+  } else {
+    index = to
+    if (!(0 < to < scrollpage.views.length - 1))
+      throw new ScrollpageError('Out of bounds!' + `No such view: ${to}!`)
+  }
+
+  to = scrollpage.views[to]
+  
+  if (scrollpage.current === to) return
+
+  if (scrollpage.options.horizontal) {
+    dx = to.x - scrollpage.current.x
+  } else {
+    dy = scrollpage.views[0].y - to.y
+  }
+
+  dx = parseInt(dx)
+  dy = parseInt(dy)
+
+  console.log(scrollpage.current.index, index)
+  console.log('from', scrollpage.current.anchor, 'to', to.anchor)
+  console.log(dx, dy)
+
+  scrollpage.root.style.setProperty('--dx', `${dx}px`)
+  scrollpage.root.style.setProperty('--dy', `${dy}px`)
+  scrollpage.currentViewIndex = index
+  
+  setTimeout(() => {
+    // scrollpage.root.scroll(dx, -dy)
+    // scrollpage.root.style.setProperty('--dx', '0px')
+    // scrollpage.root.style.setProperty('--dy', '0px')
+    window.location.hash = scrollpage.current.anchor
+  }, scrollpage.options.duration + 50)
 }
 
 function createView(list, element) {
   const view = {
     element: element,
-    get x() {return this.element.getBoundingClientRect().x},
-    get y() {return this.element.getBoundingClientRect().y},
-    get width() {return this.element.getBoundingClientRect().width},
-    get height() {return this.element.getBoundingClientRect().height}
+    get x() { return this.element.getBoundingClientRect().x },
+    get y() { return this.element.getBoundingClientRect().y },
+    get width() { return this.element.getBoundingClientRect().width },
+    get height() { return this.element.getBoundingClientRect().height }
   }
   list.push(view)
   return view
 }
 
 function init(root, selector, anchors, options) {
-  const defaultOptions = {
-    horizontal: false,
-    timefunc: timefunc.bounce,
-    duration: 1000,
-    delay: 0
-  }
 
-  const initialOptions = options? {
+  scrollpage.root = root
+  scrollpage.selector = selector
+  scrollpage.anchors = anchors
+  scrollpage.options = options ? {
     horizontal: options.horizontal || defaultOptions.horizontal,
     timefunc: options.timefunc || defaultOptions.timefunc,
     duration: options.duration || defaultOptions.duration,
@@ -58,64 +120,7 @@ function init(root, selector, anchors, options) {
 
   // todo: make root subnode mandatory with checks
   const inner = root.children[0]
-
-  const scrollpage = {
-    root: root,
-    inner: inner,
-    selector: selector,
-    anchors: anchors,
-    views: [],
-    currentViewIndex: 0,
-    options: initialOptions,
-    scrollNext: null,
-    scrollBack: null,
-    scroll: (to) => {
-      let dx = 0.0
-      let dy = 0.0
-      
-      let index = 0
-      let sign = 1
-
-      if (typeof to == 'string') {
-        index = anchors.indexOf(to.replace('#', ''))
-        if (index === -1)
-          throw new ScrollpageError(`No such view: ${to}!`)
-      } else {
-        index = to
-        if (!(0 < to < scrollpage.views.length - 1))
-          throw new ScrollpageError('Out of bounds!' + `No such view: ${to}!`)
-      }
-
-      sign = scrollpage.current.index - index > 0? sign : -1
-      to = scrollpage.views[to]
-
-      if (scrollpage.current === to) return
-
-      if (scrollpage.options.horizontal) {
-        dx = to.x
-      } else {
-        dy = -to.y
-      }
-
-      dx = dx.toFixed(1)
-      dy = dy.toFixed(1)
-
-      console.log(dx, dy)
-
-      scrollpage.root.style.setProperty('--dx', `${dx}px`)
-      scrollpage.root.style.setProperty('--dy', `${dy}px`)
-      scrollpage.currentViewIndex = index
-      setTimeout(() => {
-        // scrollpage.root.scroll(dx, -dy)
-        // scrollpage.root.style.setProperty('--dx', '0px')
-        // scrollpage.root.style.setProperty('--dy', '0px')
-        // window.location.hash = scrollpage.current.anchor
-      }, scrollpage.options.duration)
-    },
-    get current () {return this.views[this.currentViewIndex]},
-  }
-
-  const childrens = scrollpage.inner.children
+  const childrens = inner.children
 
   if (scrollpage.selector) {
     for (let i = 0; i < childrens.length; i++) {
@@ -131,7 +136,7 @@ function init(root, selector, anchors, options) {
       createView(scrollpage.views, child)
     }
   }
-  
+
   // Check if anchors and views are valid
 
   if (!(scrollpage.anchors && scrollpage.anchors.length))
@@ -139,7 +144,7 @@ function init(root, selector, anchors, options) {
 
   if (!(scrollpage.views.length === scrollpage.anchors.length))
     throw new ScrollpageError('Count of anchors might be equal to `fullpage-scrolling-layout` component childrens!')
-  
+
   // Complating the formation of view objects
 
   scrollpage.views.forEach((view, i) => {
@@ -158,3 +163,8 @@ function init(root, selector, anchors, options) {
 }
 
 export default init
+
+export {
+  OUTER_DIV_CLASSNAME,
+  INNER_DIV_CLASSNAME
+}
