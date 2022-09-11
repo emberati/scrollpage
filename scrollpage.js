@@ -378,7 +378,7 @@ function init(root, selector, anchors, options) {
     options: options ? {
       index: options.index || defaults.index,
       deadZone: options.deadZone || defaults.deadZone,
-      timefunc: options.timefunc || defaults.timefunc,
+      timefunc: timefunc[options.timefunc] || defaults.timefunc,
       duration: options.duration || defaults.duration,
       delay: options.delay || defaults.delay,
       keyScrolling: options.keyScrolling || defaults.keyScrolling,
