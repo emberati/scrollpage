@@ -67,11 +67,7 @@ function scrollNext() {
       dx = scrollpage.root.getBoundingClientRect().width
     
     dy = scrollpage.root.getBoundingClientRect().height
-    
-    console.log(dx, dy)
     window.scrollBy(dx, dy)
-
-    console.log('jumping out')
   }
 }
 
@@ -124,32 +120,37 @@ function scroll(to) {
 
 function keyScrollHandle(e) {
   let key = e.key
-    switch (key) {
-      case 'ArrowDown':
-      case 'ArrowRight':
-      case 'PageDown':
-        scrollpage.next()
-        break
-      case 'ArrowUp':
-      case 'ArrowLeft':
-      case 'PageUp':
-        scrollpage.back()
-        break
-      case 'Home':
-        scrollpage.backward()
-        break
-      case 'End':
-        scrollpage.forward()
-        break
-      case '1':case '2':case '3':
-      case '4':case '5':case '6':
-      case '7':case '8':case '9':
-        try {
-          scrollpage.scroll(parseInt(key) - 1)        
-        } catch (e) {
-          console.log('Key scroll navigation: slide', key, 'is not exist!')
-        }
-    }
+  switch (key) {
+    case 'ArrowDown':
+    case 'ArrowRight':
+    case 'PageDown':
+      e.preventDefault()
+      scrollpage.next()
+      break
+    case 'ArrowUp':
+    case 'ArrowLeft':
+    case 'PageUp':
+      e.preventDefault()
+      scrollpage.back()
+      break
+    case 'Home':
+      e.preventDefault()
+      scrollpage.backward()
+      break
+    case 'End':
+      e.preventDefault()
+      scrollpage.forward()
+      break
+    case '1':case '2':case '3':
+    case '4':case '5':case '6':
+    case '7':case '8':case '9':
+      try {
+        e.preventDefault()
+        scrollpage.scroll(parseInt(key) - 1)        
+      } catch (e) {
+        console.log('Key scroll navigation: slide', key, 'is not exist!')
+      }
+  }
 }
 
 function wheelScrollHandle(e) {
@@ -218,14 +219,14 @@ function init(root, selector, anchors, options) {
 
   // scrollpage.root.focus()
   if (scrollpage.options.keyScrolling)
-    window.addEventListener('keyup', keyScrollHandle)
+    window.addEventListener('keydown', keyScrollHandle, false)
   scrollpage.root.addEventListener('wheel', wheelScrollHandle)
 
   return scrollpage
 }
 
 function destroy() {
-  window.removeEventListener('keyup', keyScrollHandle)
+  window.removeEventListener('keydown', keyScrollHandle)
   scrollpage.root.removeEventListener('wheel', wheelScrollHandle)
 }
 
