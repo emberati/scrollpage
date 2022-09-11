@@ -123,10 +123,8 @@ function scroll(to) {
   to = scrollpage.views[to]
   
   if (scrollpage.options.horizontal) {
-    console.log(scrollpage.dx - to.x);
     dx = scrollpage.dx - to.x
   } else {
-    console.log(scrollpage.dy - to.y);
     dy = scrollpage.dy - to.y
   }
 
@@ -138,7 +136,6 @@ function scroll(to) {
   setTimeout(() => {
     window.location.hash = scrollpage.current.anchor
     scrollpage.prevent = false
-    // console.log('after')
   }, scrollpage.options.duration)
 }
 
@@ -321,7 +318,6 @@ function init(root, selector, anchors, options) {
   scrollpage.root.style.setProperty('--timefunc', scrollpage.options.timefunc)
   scrollpage.root.style.setProperty('--delay', scrollpage.options.delay)
 
-  // scrollpage.root.focus()
   if (scrollpage.options.keyScrolling)
     window.addEventListener('keydown', handleKeyScroll, false)
 
@@ -333,7 +329,6 @@ function init(root, selector, anchors, options) {
   scrollpage.root.addEventListener('touchstart', handleTouchStart, opts)
   scrollpage.root.addEventListener('touchend', handleTouchEnd, opts)
   scrollpage.root.addEventListener('touchmove', handleTouchMove, opts)
-
   scrollpage.root.addEventListener('mousedown', handleTouchStart, opts)
   scrollpage.root.addEventListener('mouseup', handleTouchEnd, opts)
   scrollpage.root.addEventListener('mouseleave', handleTouchEnd, opts)
