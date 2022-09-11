@@ -29,3 +29,38 @@ html {
 .scrollpage-outer.swipe .scrollpage-inner {
   transition: .3s!important;
 }
+
+.scrollpage-outer.landscape .scrollpage-inner {
+  display: inline-flex;
+}
+
+.scrollpage-outer.fullpage,
+.scrollpage-outer.fullpage .view {
+  width: 100vw;
+  height: 100vh;
+}
+
+/* SLIDER MODE START */
+
+.scrollpage-outer.slider {
+  overflow: initial;
+}
+
+.scrollpage-outer.slider .view {
+  margin-bottom: 20px;
+  margin-right: 0;
+}
+
+.scrollpage-outer.slider .view:last-child {
+  margin-bottom: 0;
+}
+
+.scrollpage-outer.landscape.slider .view {
+  margin-bottom: 0;
+  margin-right: 20px;
+}
+
+.scrollpage-outer.landscape.slider .view:last-child {
+  margin-right: 0;
+}
+/* SLIDER MODE END */

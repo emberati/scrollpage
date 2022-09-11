@@ -7,6 +7,9 @@
     <title>Document</title>
     <link rel="stylesheet" href="./scrollpage.css">
     <style>
+        * {
+            margin: 0;
+        }
         .v1 {
             background-color: antiquewhite;
         }
@@ -26,8 +29,29 @@
             background-color: coral;
         }
 
+        .buttons {
+            position: absolute;
+            right: 50px;
+            bottom: 50px;
+        }
+
+        .buttons button {
+            padding: 20px;
+            margin: 20px;
+            outline: none;
+            border: none;
+            background-color: darkseagreen;
+            border: 2px solid darkslategray;
+            
+            font-weight: 900;
+            transition: .3s ease-in;
+        }
+
+        .buttons button:hover {
+            border-color: black;
+        }
+
         .scrollpage-outer {
-            overflow: initial;
             height: 100vh;
             width: 100vw;
 
@@ -36,15 +60,12 @@
             border: 2px dashed black;
         }
 
-        .scrollpage-inner {
-            display: inline-flex;
-        }
-
         .view {
             height: 200px;
             width: 300px;
-            /* margin-right: 50px; */
-        } .view:last-child { margin-right: 0; }
+            padding: 20px;
+            box-sizing: border-box;
+        }
 
     </style>
 </head>
@@ -58,12 +79,19 @@
             <div class="view v5">View 5</div>
         </div>
     </div>
+    <div class="buttons">
+        <button click="switchLandscapeMode()">switch landscape mode</button>
+        <button click="switchSliderMode()">switch slider mode</button>
+        <button click="switchFullpageMode()">switch fullpage mode</button>
+    </div>
     <script type="text/javascript" src="./scrollpage.js"></script>
     <script type="text/javascript">
         var scrollpage = null
+        var scrollElement = null
         window.addEventListener('load', () => {
+            scrollElement = document.querySelector('.scrollpage-outer')
             scrollpage = init(
-                document.querySelector('.scrollpage-outer'),
+                scrollElement,
                 'view',
                 ['view1', 'view2', 'view3', 'view4', 'view5'],
                 {
@@ -71,10 +99,29 @@
                     deadZone: 50,
                 }
             )
+            let buttons = document.querySelectorAll('.buttons button')
+            buttons[0].onclick = switchLandscapeMode
+            buttons[1].onclick = switchSliderMode
+            buttons[2].onclick = switchFullpageMode
         })
         window.addEventListener('unload', () => {
             scrollpage.destroy()
         })
+
+        function switchLandscapeMode() {
+            scrollElement.classList.toggle('landscape')
+            scrollpage.redraw()
+        }
+
+        function switchSliderMode() {
+            scrollElement.classList.toggle('slider')
+            scrollpage.redraw()
+        }
+
+        function switchFullpageMode() {
+            scrollElement.classList.toggle('fullpage')
+            scrollpage.redraw()
+        }
     </script>
 </body>
 </html>
