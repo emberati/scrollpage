@@ -98,18 +98,6 @@ function scroll(to) {
   }, scrollpage.options.duration)
 }
 
-function createView(element) {
-  const view = {
-    element: element,
-    get x() { return this.element.getBoundingClientRect().x },
-    get y() { return this.element.getBoundingClientRect().y },
-    get width() { return this.element.getBoundingClientRect().width },
-    get height() { return this.element.getBoundingClientRect().height }
-  }
-  scrollpage.views.push(view)
-  return view
-}
-
 function keyScrollHandle(e) {
   let key = e.key
     switch (key) {
@@ -135,7 +123,7 @@ function keyScrollHandle(e) {
         try {
           scrollpage.scroll(parseInt(key) - 1)        
         } catch (e) {
-          console.log('Key scroll navigation: slide', key, 'is no exist!')
+          console.log('Key scroll navigation: slide', key, 'is not exist!')
         }
     }
 }
@@ -145,7 +133,6 @@ function wheelScrollHandle(e) {
   let dx = e.deltaX
   let dy = e.deltaY
 
-  console.log(dy)
   if (dx > 0 || dy > 1) {
     scrollNext()
   } else if (dx < 0 || dy < -1) {
@@ -168,39 +155,36 @@ function init(root, selector, anchors, options) {
 
   // todo: make root subnode mandatory with checks
   const inner = root.children[0]
-  const childrens = inner.children
+  const childrens = scrollpage.selector?
+    inner.querySelectorAll('.'.concat(scrollpage.selector)) :
+    inner.children
 
-  if (scrollpage.selector) {
-    for (let i = 0; i < childrens.length; i++) {
-      let child = childrens[i]
-      if (child.classList.contains(scrollpage.selector)) {
-        createView(child)
-      }
-      child.id = scrollpage.selector[i]
-    }
-  } else {
-    for (let i = 0; i < childrens.length; i++) {
-      let child = childrens[i]
-      createView(child)
-    }
-  }
+  console.log(childrens)
 
   // Check if anchors and views are valid
 
   if (!(scrollpage.anchors && scrollpage.anchors.length))
     throw new ScrollpageError("List of anchors (element's ids) might not be empty!")
 
-  if (!(scrollpage.views.length === scrollpage.anchors.length))
+  if (!(childrens.length === scrollpage.anchors.length))
     throw new ScrollpageError(`Count of anchors might be equal to \`${INNER_DIV_CLASSNAME}\` component childrens!`)
 
   // Complating the formation of view objects
 
-  scrollpage.views.forEach((view, i) => {
-    view.anchor = scrollpage.anchors[i]
-    view.index = i
+  for (let i = 0; i < childrens.length; i++) {
+    let view = {
+      element: childrens[i],
+      anchor: scrollpage.anchors[i],
+      index: i,
+      get x() { return this.element.getBoundingClientRect().x },
+      get y() { return this.element.getBoundingClientRect().y },
+      get width() { return this.element.getBoundingClientRect().width },
+      get height() { return this.element.getBoundingClientRect().height }
+    }
     view.element.classList.add('view')
     view.element.id = view.anchor
-  })
+    scrollpage.views.push(view)
+  }
 
   scrollpage.root.style.setProperty('--duration', `${scrollpage.options.duration}ms`)
   scrollpage.root.style.setProperty('--timefunc', scrollpage.options.timefunc)
@@ -209,10 +193,14 @@ function init(root, selector, anchors, options) {
   // scrollpage.root.focus()
   if (scrollpage.options.keyscroll)
     window.addEventListener('keyup', keyScrollHandle)
-
-  scrollpage.root.children[0].addEventListener('wheel', wheelScrollHandle)
+  scrollpage.root.addEventListener('wheel', wheelScrollHandle)
 
   return scrollpage
+}
+
+function destroy() {
+  window.removeEventListener('keyup', keyScrollHandle)
+  scrollpage.root.removeEventListener('wheel', wheelScrollHandle)
 }
 
 export default init
