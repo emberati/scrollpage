@@ -1,5 +1,12 @@
+/* eslint-disable */
 const OUTER_DIV_CLASSNAME = 'scrollpage-outer'
 const INNER_DIV_CLASSNAME = 'scrollpage-inner'
+const SCROLLING_CLASSNAME = 'scrolling'
+
+const timefunc = {
+  inert: 'cubic-bezier(.17,.67,.83,.67)',
+  bounce: 'cubic-bezier(0.68,-0.55,0.27,1.55)',
+}
 
 class ScrollpageError extends Error {
   constructor(message) {
@@ -25,8 +32,10 @@ function scrollTo(scrollpage, options, index) {
 function createView(list, element) {
   const view = {
     element: element,
-    get width() {return window.getComputedStyle(this.element).width},
-    get height() {return window.getComputedStyle(this.element).height}
+    get x() {return this.element.getBoundingClientRect().x},
+    get y() {return this.element.getBoundingClientRect().y},
+    get width() {return this.element.getBoundingClientRect().width},
+    get height() {return this.element.getBoundingClientRect().height}
   }
   list.push(view)
   return view
@@ -35,8 +44,8 @@ function createView(list, element) {
 function init(root, selector, anchors, options) {
   const defaultOptions = {
     horizontal: false,
-    timefunc: 'ease',
-    duration: 300,
+    timefunc: timefunc.bounce,
+    duration: 1000,
     delay: 0
   }
 
@@ -58,18 +67,17 @@ function init(root, selector, anchors, options) {
     views: [],
     currentViewIndex: 0,
     options: initialOptions,
-    scrollForward: null,
-    scrollBackward: null,
+    scrollNext: null,
+    scrollBack: null,
     scroll: (to) => {
       let dx = 0.0
       let dy = 0.0
       
       let index = 0
-      let from = null
       let sign = 1
 
       if (typeof to == 'string') {
-        index = anchors.indexOf(to)
+        index = anchors.indexOf(to.replace('#', ''))
         if (index === -1)
           throw new ScrollpageError(`No such view: ${to}!`)
       } else {
@@ -79,15 +87,14 @@ function init(root, selector, anchors, options) {
       }
 
       sign = scrollpage.current.index - index > 0? sign : -1
-      from = scrollpage.current.element
-      to = scrollpage.views[to].element
+      to = scrollpage.views[to]
 
-      if (from === to) return
+      if (scrollpage.current === to) return
 
       if (scrollpage.options.horizontal) {
-        dx = to.getClientRects()[0].x
+        dx = to.x
       } else {
-        dy = -to.getClientRects()[0].y
+        dy = -to.y
       }
 
       dx = dx.toFixed(1)
@@ -98,8 +105,12 @@ function init(root, selector, anchors, options) {
       scrollpage.root.style.setProperty('--dx', `${dx}px`)
       scrollpage.root.style.setProperty('--dy', `${dy}px`)
       scrollpage.currentViewIndex = index
-      
-      console.log(to, scrollpage.currentViewIndex)
+      setTimeout(() => {
+        // scrollpage.root.scroll(dx, -dy)
+        // scrollpage.root.style.setProperty('--dx', '0px')
+        // scrollpage.root.style.setProperty('--dy', '0px')
+        // window.location.hash = scrollpage.current.anchor
+      }, scrollpage.options.duration)
     },
     get current () {return this.views[this.currentViewIndex]},
   }
@@ -135,10 +146,14 @@ function init(root, selector, anchors, options) {
     view.anchor = scrollpage.anchors[i]
     view.index = i
     view.element.classList.add('view')
+    view.element.id = view.anchor
   })
 
-  scrollpage.root.style.setProperty('--transition-duration', `${scrollpage.options.duration}ms`)
-
+  scrollpage.root.style.setProperty('--duration', `${scrollpage.options.duration}ms`)
+  scrollpage.root.style.setProperty('--timefunc', scrollpage.options.timefunc)
+  scrollpage.root.style.setProperty('--delay', scrollpage.options.delay)
+  // scrollpage.root.style.setProperty('--dx', '0px')
+  // scrollpage.root.style.setProperty('--dy', '0px')
   return scrollpage
 }
 
