@@ -19,7 +19,7 @@ const edgeScrollBehavior = {
 }
 
 const defaults = {
-  horizontal: true,
+  horizontal: false,
   timefunc: timefunc.ease,
   duration: 1500,
   delay: 0,
@@ -28,6 +28,8 @@ const defaults = {
 }
 
 const scrollpage = {
+  touch: {x: undefined, y: undefined},
+  prevent: false,
   views: [],
   currentViewIndex: 0,
   forward: scrollForward,
@@ -35,6 +37,8 @@ const scrollpage = {
   next: scrollNext,
   back: scrollBack,
   scroll: scroll,
+  get dx() { return this.views[0].x - scrollpage.root.getBoundingClientRect().x },
+  get dy() { return this.views[0].y - scrollpage.root.getBoundingClientRect().y },
   get current() { return this.views[this.currentViewIndex] },
 }
 
@@ -107,9 +111,9 @@ function scroll(to) {
 
   console.log('before')
   scrollpage.prevent = true
-  scrollpage.root.style.setProperty('--dx', `${dx}px`)
-  scrollpage.root.style.setProperty('--dy', `${dy}px`)
   scrollpage.currentViewIndex = index
+
+  appendStyleCoords(dx, dy)
   
   setTimeout(() => {
     window.location.hash = scrollpage.current.anchor
@@ -118,7 +122,7 @@ function scroll(to) {
   }, scrollpage.options.duration)
 }
 
-function keyScrollHandle(e) {
+function handleKeyScroll(e) {
   let key = e.key
   switch (key) {
     case 'ArrowDown':
@@ -153,17 +157,77 @@ function keyScrollHandle(e) {
   }
 }
 
-function wheelScrollHandle(e) {
+function handleWheelScroll(e) {
+  if (e.ctrlKey) return
   e.preventDefault()
   let dx = e.deltaX
   let dy = e.deltaY
   
   if (dx > 10 || dy > 10) {
-    console.log(dx, dy)
+    // console.log(dx, dy)
     scrollNext()
   } else if (dx < -10 || dy < -10) {
     scrollBack()
   }
+}
+
+function handleTouchStart(e) {
+  e.preventDefault()
+  if (scrollpage.prevent) return
+  scrollpage.prevent = true
+  scrollpage.root.classList.add('touch')
+  let coords = getTouchCoords(e)
+  scrollpage.touch.x = coords.x
+  scrollpage.touch.y = coords.y
+}
+
+function handleTouchEnd(e) {
+  // e.preventDefault()
+  scrollpage.prevent = false
+  scrollpage.root.classList.remove('touch')
+  scrollpage.touch.x = undefined
+  scrollpage.touch.y = undefined
+}
+
+function handleTouchMove(e) {
+  let dx = 0
+  let dy = 0
+  let coords = getTouchCoords(e)
+  
+  if (!scrollpage.prevent || !scrollpage.touch.x || !scrollpage.touch.y) return
+  // console.log('ends in:', e.clientX, e.clientY);
+  // console.log('ends in:', e.clientX - scrollpage.touch.x)
+  if (scrollpage.options.horizontal) {
+    dx = scrollpage.dx + (coords.x - scrollpage.touch.x)
+    // dx = scrollpage.dx + e.movementX
+  } else {
+    dy = scrollpage.dy + (coords.y - scrollpage.touch.y)
+    // dy = scrollpage.dy + e.movementY
+    // console.log(e.screenY - scrollpage.touch.y, e.movementY)
+    // console.log(e);
+  }
+  coords = getTouchCoords(e)
+  scrollpage.touch.x = coords.x
+  scrollpage.touch.y = coords.y
+  appendStyleCoords(dx, dy)
+}
+
+function getTouchCoords(e) {
+  if (e instanceof TouchEvent) {
+    if (e.touches.length > 1) return
+    e = e.touches[0]
+    console.log('touch event')
+  }
+
+  // scrollpage.touch.x = e.screenX
+  // scrollpage.touch.y = e.screenY
+
+  return {x: e.screenX, y: e.screenY}
+}
+
+function appendStyleCoords(dx, dy) {
+  scrollpage.root.style.setProperty('--dx', `${dx}px`)
+  scrollpage.root.style.setProperty('--dy', `${dy}px`)
 }
 
 function init(root, selector, anchors, options) {
@@ -185,8 +249,6 @@ function init(root, selector, anchors, options) {
   const childrens = scrollpage.selector?
     inner.querySelectorAll('.'.concat(scrollpage.selector)) :
     inner.children
-
-  console.log(childrens)
 
   // Check if anchors and views are valid
 
@@ -219,15 +281,30 @@ function init(root, selector, anchors, options) {
 
   // scrollpage.root.focus()
   if (scrollpage.options.keyScrolling)
-    window.addEventListener('keydown', keyScrollHandle, false)
-  scrollpage.root.addEventListener('wheel', wheelScrollHandle)
+    window.addEventListener('keydown', handleKeyScroll, false)
+
+  let opts = {
+    capture: false,
+    passive: false
+  }
+
+  scrollpage.root.addEventListener('touchstart', handleTouchStart, opts)
+  scrollpage.root.addEventListener('touchend', handleTouchEnd, opts)
+  scrollpage.root.addEventListener('touchmove', handleTouchMove, opts)
+
+  scrollpage.root.addEventListener('mousedown', handleTouchStart, opts)
+  scrollpage.root.addEventListener('mouseup', handleTouchEnd, opts)
+  scrollpage.root.addEventListener('mouseleave', handleTouchEnd, opts)
+  scrollpage.root.addEventListener('mousemove', handleTouchMove, opts)
+
+  scrollpage.root.addEventListener('wheel', handleWheelScroll, {passive: false})
 
   return scrollpage
 }
 
 function destroy() {
-  window.removeEventListener('keydown', keyScrollHandle)
-  scrollpage.root.removeEventListener('wheel', wheelScrollHandle)
+  window.removeEventListener('keydown', handleKeyScroll)
+  scrollpage.root.removeEventListener('wheel', handleWheelScroll)
 }
 
 export default init
