@@ -43,14 +43,16 @@ function scrollBackward() {
 }
 
 function scrollNext() {
+  console.log(this.index, this.views.length - 1);
+
   if (this.index < this.views.length - 1) {
-    scroll(this.index + 1)
+    this.scroll(this.index + 1)
     return
   }
   
   switch (this.options.edgeScrollBehavior) {
     case 'ignore':
-      redraw()
+      this.redraw()
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
@@ -58,11 +60,11 @@ function scrollNext() {
       
       dy = bounds.height
 
-      redraw()
+      this.redraw()
       window.scrollBy(dx, dy)
       return
     case 'backward':
-      scrollBackward()
+      this.backward()
       return
   }
 }
@@ -101,7 +103,7 @@ function scroll(to) {
   this.prevent = true
 
   try {
-    index = indexOf(to)
+    index = this.indexOf(to)
   } catch (err) {
     index = this.index
     this.prevent = false
@@ -110,7 +112,7 @@ function scroll(to) {
 
   this.index = index
 
-  redraw()
+  this.redraw()
 
   setTimeout(() => {
     window.location.hash = this.current.anchor
@@ -123,7 +125,7 @@ function redraw() {
   let dx = this.dx - this.current.x
   let dy = this.dy - this.current.y
 
-  appendStyleCoords(dx, dy)
+  this.appendStyleCoords(dx, dy)
 }
 
 function indexOf(anchor) {
@@ -178,16 +180,18 @@ function handleKeyScroll(e) {
   }
 }
 
-function handleWheelScroll(e) {
-  if (e.ctrlKey || this.prevent) return
-  e.preventDefault()
-  let dx = e.deltaX
-  let dy = e.deltaY
-  
-  if (dx > 10 || dy > 10) {
-    scrollNext()
-  } else if (dx < -10 || dy < -10) {
-    scrollBack()
+function handleWheelScroll(scp) {
+  return function(e) {
+    if (e.ctrlKey || scp.prevent) return
+    e.preventDefault()
+    let dx = e.deltaX
+    let dy = e.deltaY
+    
+    if (dx > 10 || dy > 10) {
+      scp.next()
+    } else if (dx < -10 || dy < -10) {
+      scp.back()
+    }
   }
 }
 
@@ -316,6 +320,8 @@ function init(root, selector, anchors, options) {
     next: scrollNext,
     back: scrollBack,
     scroll: scroll,
+    indexOf: indexOf,
+    appendStyleCoords: appendStyleCoords,
     destroy: destroy,
     redraw: redraw,
     get dx() { return this.views[0].x - this.root.getBoundingClientRect().x },
@@ -376,7 +382,7 @@ function init(root, selector, anchors, options) {
   scrollpage.root.addEventListener('mouseup', handleTouchEnd, opts)
   scrollpage.root.addEventListener('mouseleave', deactiveTouch, opts)
   scrollpage.root.addEventListener('mousemove', handleTouchMove, opts)
-  scrollpage.root.addEventListener('wheel', handleWheelScroll, {passive: false})
+  scrollpage.root.addEventListener('wheel', handleWheelScroll(scrollpage), {passive: false})
   window.addEventListener('resize', redraw)
 
   return scrollpage
