@@ -223,51 +223,51 @@ function handleTouchEnd(scp) {
     let vc = current.x + current.width / 2
     let hc = current.y + current.height / 2
 
-    scp.root.style.position = 'relative'
+    // scp.root.style.position = 'relative'
 
-    createMarker = (name, horiz, color) => {
-      const marker = document.createElement('div')
-      marker.style.width = horiz ? '100%' : '0'
-      marker.style.height = horiz ? '0' : '100%'
-      marker.style.position = 'absolute'
-      marker.style.boxShadow = '0 0 0 0.5px ' + color
-      marker.setAttribute('class', name)
-      return marker
-    }
+    // createMarker = (name, horiz, color) => {
+    //   const marker = document.createElement('div')
+    //   marker.style.width = horiz ? '100%' : '0'
+    //   marker.style.height = horiz ? '0' : '100%'
+    //   marker.style.position = 'absolute'
+    //   marker.style.boxShadow = '0 0 0 0.5px ' + color
+    //   marker.setAttribute('class', name)
+    //   return marker
+    // }
 
-    setMarkerPosition = (marker, left, top) => {
-      marker.style.left = `${left}px`
-      marker.style.top = `${top}px`
-    }
+    // setMarkerPosition = (marker, left, top) => {
+    //   marker.style.left = `${left}px`
+    //   marker.style.top = `${top}px`
+    // }
 
-    marker = (name, horiz, color) =>  {
-      let marker = scp.root.querySelector('.' + name)
-      if (!marker) marker = createMarker(name, horiz, color)
+    // marker = (name, horiz, color) =>  {
+    //   let marker = scp.root.querySelector('.' + name)
+    //   if (!marker) marker = createMarker(name, horiz, color)
 
-      return {
-        pos: ({left, right, top, bottom}) => {
-          if (left || left === 0) marker.style.left = typeof left === 'number' ? left + 'px' : left
-          if (right || right === 0) marker.style.right = typeof right === 'number' ? right + 'px' : right
-          if (top || top === 0) marker.style.top = typeof top === 'number' ? top + 'px' : top
-          if (bottom || bottom === 0) marker.style.bottom = typeof bottom === 'number' ? bottom + 'px' : bottom
-        },
-        self: marker
-      }
-    }
+    //   return {
+    //     pos: ({left, right, top, bottom}) => {
+    //       if (left || left === 0) marker.style.left = typeof left === 'number' ? left + 'px' : left
+    //       if (right || right === 0) marker.style.right = typeof right === 'number' ? right + 'px' : right
+    //       if (top || top === 0) marker.style.top = typeof top === 'number' ? top + 'px' : top
+    //       if (bottom || bottom === 0) marker.style.bottom = typeof bottom === 'number' ? bottom + 'px' : bottom
+    //     },
+    //     self: marker
+    //   }
+    // }
 
-    const vline = marker('vline', false, 'red').self
-    const hline = marker('hline', true, 'green').self
-    const fline1 = marker('fline1', false, 'blue').self
-    const fline2 = marker('fline2', false, 'blue').self
-    const fline3 = marker('fline3', true, 'purple').self
-    const fline4 = marker('fline4', true, 'purple').self
+    // const vline = marker('vline', false, 'red').self
+    // const hline = marker('hline', true, 'green').self
+    // const fline1 = marker('fline1', false, 'blue').self
+    // const fline2 = marker('fline2', false, 'blue').self
+    // const fline3 = marker('fline3', true, 'purple').self
+    // const fline4 = marker('fline4', true, 'purple').self
 
-    scp.root.appendChild(vline)
-    scp.root.appendChild(hline)    
-    scp.root.appendChild(fline1)
-    scp.root.appendChild(fline2)
-    scp.root.appendChild(fline3)
-    scp.root.appendChild(fline4)
+    // scp.root.appendChild(vline)
+    // scp.root.appendChild(hline)
+    // scp.root.appendChild(fline1)
+    // scp.root.appendChild(fline2)
+    // scp.root.appendChild(fline3)
+    // scp.root.appendChild(fline4)
 
     const dz = scp.options.deadZone
 
@@ -276,15 +276,15 @@ function handleTouchEnd(scp) {
     let f3 = (root.height - dz) / 2
     let f4 = (root.height + dz) / 2
 
-    console.log(`x, dx: ${current.x}, ${scp.dx}; y, dy: ${current.y}, ${scp.dy}`);
-    console.log(`w, h: ${current.width}, ${current.height}; diff: ${f2 - f1} of real ${dz}`)
+    // console.log(`x, dx: ${current.x}, ${scp.dx}; y, dy: ${current.y}, ${scp.dy}`);
+    // console.log(`w, h: ${current.width}, ${current.height}; diff: ${f2 - f1} of real ${dz}`)
 
-    marker('vline').pos({left: vc, top: 0})
-    marker('hline').pos({top: hc})
-    marker('fline1').pos({left: f1, top: 0})
-    marker('fline2').pos({left: f2, top: 0})
-    marker('fline3').pos({left: 0, top: f3})
-    marker('fline4').pos({left: 0, top: f4})
+    // marker('vline').pos({left: vc, top: 0})
+    // marker('hline').pos({top: hc})
+    // marker('fline1').pos({left: f1, top: 0})
+    // marker('fline2').pos({left: f2, top: 0})
+    // marker('fline3').pos({left: 0, top: f3})
+    // marker('fline4').pos({left: 0, top: f4})
 
     if (scp.isLandscape && vc > f1 && vc < f2) {
       scp.redraw()
@@ -329,6 +329,8 @@ function handleTouchMove(scp) {
     if (!scp.touch.x || !scp.touch.y) return
   
     if (scp.isLandscape) {
+      // console.log('coords.x:', coords.x, 'scp.touch.x:', scp.touch.x);
+      console.log(scp.dx, coords.x - scp.touch.x);
       dx = scp.dx + (coords.x - scp.touch.x)
     } else {
       dy = scp.dy + (coords.y - scp.touch.y)
@@ -401,8 +403,16 @@ function init(root, selector, anchors, options) {
     deactiveTouch: deactiveTouch,
     destroy: destroy,
     redraw: redraw,
-    get dx() { return this.views[0].element.getBoundingClientRect().x - this.root.getBoundingClientRect().x },
-    get dy() { return this.views[0].element.getBoundingClientRect().y - this.root.getBoundingClientRect().y },
+    get dx() {
+      const firsViewRect = this.views[0].element.getBoundingClientRect()
+      const rootRect = this.root.getBoundingClientRect()
+      return firsViewRect.x - rootRect.x + (firsViewRect.width - rootRect.width) / 2
+    },
+    get dy() {
+      const firsViewRect = this.views[0].element.getBoundingClientRect()
+      const rootRect = this.root.getBoundingClientRect()
+      return firsViewRect.y - rootRect.y + (firsViewRect.height - rootRect.height) / 2
+    },
     get current() { return this.views[this.index] },
     get isLandscape() { return this.views[0].y === this.views[this.views.length - 1].y }
   }
