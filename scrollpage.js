@@ -342,12 +342,6 @@ function handleTouchMove(scp) {
   }
 }
 
-function handleTouchLeave(scp) {
-  return function() {
-    scp.deactiveTouch()
-  }
-}
-
 function handleResize(scp) {
   return function() {
     scp.redraw()
@@ -468,7 +462,7 @@ function init(root, selector, anchors, options) {
     'touchmove': handleTouchMove(scrollpage),
     'mousedown': handleTouchStart(scrollpage),
     'mouseup': handleTouchEnd(scrollpage),
-    'mouseleave': handleTouchLeave(scrollpage),
+    'mouseleave': handleTouchEnd(scrollpage),
     'mousemove': handleTouchMove(scrollpage),
     'wheel': handleWheelScroll(scrollpage),
     'resize': handleResize(scrollpage),
