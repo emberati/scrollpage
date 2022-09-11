@@ -38,6 +38,7 @@ const scrollpage = {
   next: scrollNext,
   back: scrollBack,
   scroll: scroll,
+  destroy: destroy,
   get dx() { return this.views[0].x - scrollpage.root.getBoundingClientRect().x },
   get dy() { return this.views[0].y - scrollpage.root.getBoundingClientRect().y },
   get current() { return this.views[this.currentViewIndex] },
@@ -273,7 +274,7 @@ function appendStyleCoords(dx, dy) {
 }
 
 function init(root, selector, anchors, options) {
-
+  console.log('Initializing Scrollpage...');
   scrollpage.root = root
   scrollpage.selector = selector
   scrollpage.anchors = anchors
@@ -343,8 +344,15 @@ function init(root, selector, anchors, options) {
 }
 
 function destroy() {
-  window.removeEventListener('keydown', handleKeyScroll)
+  scrollpage.root.removeEventListener('touchstart', handleTouchStart)
+  scrollpage.root.removeEventListener('touchend', handleTouchEnd)
+  scrollpage.root.removeEventListener('touchmove', handleTouchMove)
+  scrollpage.root.removeEventListener('mousedown', handleTouchStart)
+  scrollpage.root.removeEventListener('mouseup', handleTouchEnd)
+  scrollpage.root.removeEventListener('mouseleave', deactiveTouch)
+  scrollpage.root.removeEventListener('mousemove', handleTouchMove)
   scrollpage.root.removeEventListener('wheel', handleWheelScroll)
+  console.log('Scrollpage has been destroyed...')
 }
 
 export default init
