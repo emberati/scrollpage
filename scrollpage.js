@@ -6,24 +6,28 @@ const timefunc = {
   ease: 'ease',
   easeIn: 'ease-in',
   easeOut: 'ease-out',
-  easeInOut: 'ease-in-out',
   linear: 'linear',
   inert: 'cubic-bezier(.17,.67,.83,.67)',
-  bounce: 'cubic-bezier(0.68,-0.55,0.27,1.55)',
+  bounce: 'cubic-bezier(.55,-.55,.55,1.55)',
+  bounceIn: 'cubic-bezier(.55,-.55,.55,1)',
+  bounceOut: 'cubic-bezier(.5,0,.5,1.55)',
 }
 
 const defaultOptions = {
-  horizontal: false,
-  timefunc: timefunc.ease,
+  horizontal: true,
+  timefunc: timefunc.bounceIn,
   duration: 1000,
-  delay: 0
+  delay: 0,
+  keyscroll: true,
 }
 
 const scrollpage = {
   views: [],
   currentViewIndex: 0,
-  scrollNext: scrollNext,
-  scrollBack: scrollBack,
+  forward: scrollForward,
+  backward: scrollBackward,
+  next: scrollNext,
+  back: scrollBack,
   scroll: scroll,
   get current() { return this.views[this.currentViewIndex] },
 }
@@ -31,21 +35,25 @@ const scrollpage = {
 class ScrollpageError extends Error {
   constructor(message) {
     super(message)
-    this.name = 'ScrollViewError'
+    this.name = 'ScrollpageError'
   }
+}
+
+function scrollForward() {
+  scroll(scrollpage.views.length - 1)
+}
+
+function scrollBackward() {
+  scroll(0)
 }
 
 function scrollNext() {
-  console.log('NEXT')
   if (scrollpage.currentViewIndex < scrollpage.views.length - 1) {
     scroll(scrollpage.currentViewIndex+1)
   }
-  
-  
 }
 
 function scrollBack() {
-  console.log('BACK')
   if (scrollpage.currentViewIndex > 0)
     scroll(scrollpage.currentViewIndex-1) 
 }
@@ -56,14 +64,14 @@ function scroll(to) {
 
   let index = 0
 
-  if (typeof to == 'string') {
+  if (typeof to == 'string') {  
     index = anchors.indexOf(to.replace('#', ''))
     if (index === -1)
       throw new ScrollpageError(`No such view: ${to}!`)
   } else {
     index = to
-    if (!(0 < to < scrollpage.views.length - 1))
-      throw new ScrollpageError('Out of bounds!' + `No such view: ${to}!`)
+    if (!(index >= 0 && index <= scrollpage.views.length - 1))
+      throw new ScrollpageError('Out of bounds! ' + `No such view: ${to}!`)
   }
 
   to = scrollpage.views[to]
@@ -71,7 +79,7 @@ function scroll(to) {
   if (scrollpage.current === to || scrollpage.prevent) return
 
   if (scrollpage.options.horizontal) {
-    dx = to.x - scrollpage.current.x
+    dx = scrollpage.views[0].x - to.x
   } else {
     dy = scrollpage.views[0].y - to.y
   }
@@ -79,25 +87,18 @@ function scroll(to) {
   dx = parseInt(dx)
   dy = parseInt(dy)
 
-  console.log(scrollpage.current.index, index)
-  console.log('from', scrollpage.current.anchor, 'to', to.anchor)
-  console.log(dx, dy)
-
   scrollpage.prevent = true
   scrollpage.root.style.setProperty('--dx', `${dx}px`)
   scrollpage.root.style.setProperty('--dy', `${dy}px`)
   scrollpage.currentViewIndex = index
   
   setTimeout(() => {
-    // scrollpage.root.scroll(dx, -dy)
-    // scrollpage.root.style.setProperty('--dx', '0px')
-    // scrollpage.root.style.setProperty('--dy', '0px')
     window.location.hash = scrollpage.current.anchor
     scrollpage.prevent = false
   }, scrollpage.options.duration)
 }
 
-function createView(list, element) {
+function createView(element) {
   const view = {
     element: element,
     get x() { return this.element.getBoundingClientRect().x },
@@ -105,7 +106,7 @@ function createView(list, element) {
     get width() { return this.element.getBoundingClientRect().width },
     get height() { return this.element.getBoundingClientRect().height }
   }
-  list.push(view)
+  scrollpage.views.push(view)
   return view
 }
 
@@ -129,14 +130,14 @@ function init(root, selector, anchors, options) {
     for (let i = 0; i < childrens.length; i++) {
       let child = childrens[i]
       if (child.classList.contains(scrollpage.selector)) {
-        createView(scrollpage.views, child)
+        createView(child)
       }
       child.id = scrollpage.selector[i]
     }
   } else {
     for (let i = 0; i < childrens.length; i++) {
       let child = childrens[i]
-      createView(scrollpage.views, child)
+      createView(child)
     }
   }
 
@@ -146,7 +147,7 @@ function init(root, selector, anchors, options) {
     throw new ScrollpageError("List of anchors (element's ids) might not be empty!")
 
   if (!(scrollpage.views.length === scrollpage.anchors.length))
-    throw new ScrollpageError('Count of anchors might be equal to `fullpage-scrolling-layout` component childrens!')
+    throw new ScrollpageError(`Count of anchors might be equal to \`${INNER_DIV_CLASSNAME}\` component childrens!`)
 
   // Complating the formation of view objects
 
@@ -160,8 +161,38 @@ function init(root, selector, anchors, options) {
   scrollpage.root.style.setProperty('--duration', `${scrollpage.options.duration}ms`)
   scrollpage.root.style.setProperty('--timefunc', scrollpage.options.timefunc)
   scrollpage.root.style.setProperty('--delay', scrollpage.options.delay)
-  // scrollpage.root.style.setProperty('--dx', '0px')
-  // scrollpage.root.style.setProperty('--dy', '0px')
+
+  // scrollpage.root.focus()
+  window.addEventListener('keyup', e => {
+    let key = e.key
+    switch (key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+      case 'PageDown':
+        scrollpage.next()
+        break
+      case 'ArrowUp':
+      case 'ArrowLeft':
+      case 'PageUp':
+        scrollpage.back()
+        break
+      case 'Home':
+        scrollpage.backward()
+        break
+      case 'End':
+        scrollpage.forward()
+        break
+      case '1':case '2':case '3':
+      case '4':case '5':case '6':
+      case '7':case '8':case '9':
+        try {
+          scrollpage.scroll(parseInt(key) - 1)        
+        } catch (e) {
+          console.log('Key scroll navigation: slide', key, 'is no exist!')
+        }
+    }
+  })
+
   return scrollpage
 }
 
