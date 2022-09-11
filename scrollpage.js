@@ -20,7 +20,8 @@ const edgeScrollBehavior = {
 }
 
 const defaults = {
-  index: 4,
+  index: 0,
+  deadZone: 200,
   timefunc: timefunc.inert,
   duration: 500,
   delay: 0,
@@ -121,10 +122,10 @@ function scroll(to) {
 
 function redraw() {
   // It may need check on if isLandscape, then update dx or dy
-  let dx = 0 // this.isLandscape ? parseInt(this.dx - this.current.x) : 0
+  let dx = this.isLandscape ? parseInt(this.views[0].x - this.current.x) : 0
   let dy = !this.isLandscape ? parseInt(this.views[0].y - this.current.y) : 0
 
-  console.log('dx: ', dx, 'dy:', dy)
+  // console.log(`Redrawing on dx, dy ${dx}, ${dy}`)
 
   this.appendStyleCoords(dx, dy)
 }
@@ -219,17 +220,75 @@ function handleTouchEnd(scp) {
     const root = scp.root.getBoundingClientRect()
     const current = scp.current
     
-    const f = 200
     let vc = current.x + current.width / 2
     let hc = current.y + current.height / 2
 
-    let f1 = (root.width - f) / 2
-    let f2 = (root.width + f) / 2
-    let f3 = (root.height - f) / 2
-    let f4 = (root.height + f) / 2
+    scp.root.style.position = 'relative'
+
+    createMarker = (name, horiz, color) => {
+      const marker = document.createElement('div')
+      marker.style.width = horiz ? '100%' : '0'
+      marker.style.height = horiz ? '0' : '100%'
+      marker.style.position = 'absolute'
+      marker.style.boxShadow = '0 0 0 0.5px ' + color
+      marker.setAttribute('class', name)
+      return marker
+    }
+
+    setMarkerPosition = (marker, left, top) => {
+      marker.style.left = `${left}px`
+      marker.style.top = `${top}px`
+    }
+
+    marker = (name, horiz, color) =>  {
+      let marker = scp.root.querySelector('.' + name)
+      if (!marker) marker = createMarker(name, horiz, color)
+
+      return {
+        pos: ({left, right, top, bottom}) => {
+          if (left || left === 0) marker.style.left = typeof left === 'number' ? left + 'px' : left
+          if (right || right === 0) marker.style.right = typeof right === 'number' ? right + 'px' : right
+          if (top || top === 0) marker.style.top = typeof top === 'number' ? top + 'px' : top
+          if (bottom || bottom === 0) marker.style.bottom = typeof bottom === 'number' ? bottom + 'px' : bottom
+        },
+        self: marker
+      }
+    }
+
+    const vline = marker('vline', false, 'red').self
+    const hline = marker('hline', true, 'green').self
+    const fline1 = marker('fline1', false, 'blue').self
+    const fline2 = marker('fline2', false, 'blue').self
+    const fline3 = marker('fline3', true, 'purple').self
+    const fline4 = marker('fline4', true, 'purple').self
+
+    scp.root.appendChild(vline)
+    scp.root.appendChild(hline)    
+    scp.root.appendChild(fline1)
+    scp.root.appendChild(fline2)
+    scp.root.appendChild(fline3)
+    scp.root.appendChild(fline4)
+
+    const dz = scp.options.deadZone
+
+    let f1 = (root.width - dz) / 2
+    let f2 = (root.width + dz) / 2
+    let f3 = (root.height - dz) / 2
+    let f4 = (root.height + dz) / 2
+
+    console.log(`x, dx: ${current.x}, ${scp.dx}; y, dy: ${current.y}, ${scp.dy}`);
+    console.log(`w, h: ${current.width}, ${current.height}; diff: ${f2 - f1} of real ${dz}`)
+
+    marker('vline').pos({left: vc, top: 0})
+    marker('hline').pos({top: hc})
+    marker('fline1').pos({left: f1, top: 0})
+    marker('fline2').pos({left: f2, top: 0})
+    marker('fline3').pos({left: 0, top: f3})
+    marker('fline4').pos({left: 0, top: f4})
 
     if (scp.isLandscape && vc > f1 && vc < f2) {
       scp.redraw()
+      console.log('NO SCROLLING')
       return
     } else {
       if (vc < f1) {
@@ -315,8 +374,6 @@ function appendStyleCoords(dx, dy) {
 }
 
 function init(root, selector, anchors, options) {
-  console.log('Initializing this...')
-
   const scrollpage = {
     index: 0,
     root: root,
@@ -324,6 +381,7 @@ function init(root, selector, anchors, options) {
     anchors: anchors,
     options: options ? {
       index: options.index || defaults.index,
+      deadZone: options.deadZone || defaults.deadZone,
       timefunc: options.timefunc || defaults.timefunc,
       duration: options.duration || defaults.duration,
       delay: options.delay || defaults.delay,
@@ -343,8 +401,8 @@ function init(root, selector, anchors, options) {
     deactiveTouch: deactiveTouch,
     destroy: destroy,
     redraw: redraw,
-    get dx() { return this.views[0].x - this.root.getBoundingClientRect().x },
-    get dy() { return this.views[0].y - this.root.getBoundingClientRect().y },
+    get dx() { return this.views[0].element.getBoundingClientRect().x - this.root.getBoundingClientRect().x },
+    get dy() { return this.views[0].element.getBoundingClientRect().y - this.root.getBoundingClientRect().y },
     get current() { return this.views[this.index] },
     get isLandscape() { return this.views[0].y === this.views[this.views.length - 1].y }
   }
@@ -374,8 +432,8 @@ function init(root, selector, anchors, options) {
         element: childrens[i],
         anchor: scrollpage.anchors[i],
         index: i,
-        get x() { return getBoundsOf(this).x },
-        get y() { return getBoundsOf(this).y },
+        get x() { return getBoundsOf(this).x - scrollpage.root.getBoundingClientRect().x },
+        get y() { return getBoundsOf(this).y - scrollpage.root.getBoundingClientRect().y },
         get width() { return getBoundsOf(this).width },
         get height() { return getBoundsOf(this).height }
       }
@@ -420,10 +478,10 @@ function init(root, selector, anchors, options) {
     window.addEventListener('keydown', scrollpage.handlers['keydown'])
 
   scrollpage.scroll(scrollpage.options.index)
-  scrollpage.views.forEach(e => {
-    console.log(e.anchor, e.height)
-    console.log(scrollpage.dy);
-  })
+  // scrollpage.views.forEach(e => {
+  //   console.log(e.anchor, e.height)
+  //   console.log(scrollpage.dy);
+  // })
   return scrollpage
 }
 
