@@ -443,9 +443,9 @@ function destroy() {
   console.log('Scrollpage has been destroyed...')
 }
 
-export default init
+// export default init
 
-export {
-  OUTER_DIV_CLASSNAME,
-  INNER_DIV_CLASSNAME
-}
+// export {
+//   OUTER_DIV_CLASSNAME,
+//   INNER_DIV_CLASSNAME
+// }

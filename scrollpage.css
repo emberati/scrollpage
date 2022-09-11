@@ -1,0 +1,37 @@
+html {
+  scroll-behavior: smooth;
+  scroll-snap-type: y mandatory;
+}
+.scrollpage-outer {
+  margin: auto;
+}
+
+.scrollpage-outer, .view {
+  height: 100vh;
+  width: 100vw;
+
+  height: 600px;
+  width: 800px;
+
+  overflow: hidden;
+  outline: none;
+}
+
+.scrollpage-inner {
+  transition-property: transform;
+  transition-timing-function: var(--timefunc);
+  transition-duration: var(--duration);
+  transition-delay: var(--delay);
+  
+  transform: translate(var(--dx), var(--dy));
+}
+
+.scrollpage-outer.touch .scrollpage-inner {
+  user-select: none;
+  touch-action: none;
+  transition: none!important;
+}
+
+.scrollpage-outer.swipe .scrollpage-inner {
+  transition: .3s!important;
+}

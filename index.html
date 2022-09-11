@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .v1 {
+            background-color: antiquewhite;
+        }
+        .v2 {
+            background-color: darkcyan;
+        }
+
+        .v3 {
+            background-color: cadetblue;
+        }
+
+        .v4 {
+            background-color: tomato;
+        }
+
+        .v5 {
+            background-color: coral;
+        }
+    </style>
+    <style src="./scrollpage.css">
+        @import url(./scrollpage.css);
+    </style>
+</head>
+<body>
+    <div class="scrollpage-outer">
+        <div class="scrollpage-inner">
+            <div class="view v1">View 1</div>
+            <div class="view v2">View 2</div>
+            <div class="view v3">View 3</div>
+            <div class="view v4">View 4</div>
+            <div class="view v5">View 5</div>
+        </div>
+    </div>
+    <script type="text/javascript" src="./scrollpage.js"></script>
+    <script type="text/javascript">
+        var scrollpage = null
+        window.addEventListener('load', () => {
+            scrollpage = init(
+                document.querySelector('.scrollpage-outer'),
+                'view',
+                ['view1', 'view2', 'view3', 'view4', 'view5']
+            )
+            console.log('pidor');
+        })
+    </script>
+</body>
+</html>
