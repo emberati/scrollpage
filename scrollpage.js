@@ -1,4 +1,4 @@
-/* eslint-disable */
+
 const OUTER_DIV_CLASSNAME = 'scrollpage-outer'
 const INNER_DIV_CLASSNAME = 'scrollpage-inner'
 
@@ -15,11 +15,12 @@ const timefunc = {
 
 const edgeScrollBehavior = {
   jumpOut: 'jumpOut',
-  backward: 'backward'
+  backward: 'backward',
+  ignore: 'ignore'
 }
 
 const defaults = {
-  horizontal: false,
+  horizontal: true,
   timefunc: timefunc.ease,
   duration: 1500,
   delay: 0,
@@ -62,22 +63,47 @@ function scrollNext() {
     scroll(scrollpage.currentViewIndex+1)
     return
   }
-
-  if (scrollpage.options.edgeScrollBehavior == 'jumpOut' && !scrollpage.prevent) {
-    let dx = 0
-    let dy = 0
-
-    if (scrollpage.options.horizontal)
-      dx = scrollpage.root.getBoundingClientRect().width
-    
-    dy = scrollpage.root.getBoundingClientRect().height
-    window.scrollBy(dx, dy)
+  
+  
+  switch (scrollpage.options.edgeScrollBehavior) {
+    case 'ignore':
+      return
+    case 'jumpOut':
+      var dx = 0; var dy = 0
+      var bounds = scrollpage.root.getBoundingClientRect()
+      if (scrollpage.options.horizontal)
+        dx = bounds.width
+      
+      dy = bounds.height
+      window.scrollBy(dx, dy)
+      return
+    case 'backward':
+      scrollBackward()
+      return
   }
 }
 
 function scrollBack() {
-  if (scrollpage.currentViewIndex > 0)
+  if (scrollpage.currentViewIndex > 0) {
     scroll(scrollpage.currentViewIndex-1) 
+    return
+  }
+  switch (scrollpage.options.edgeScrollBehavior) {
+    case 'ignore':
+      return
+    case 'jumpOut':
+      var dx = 0; var dy = 0
+      var bounds = scrollpage.root.getBoundingClientRect()
+      if (scrollpage.options.horizontal)
+        dx = bounds.x - bounds.width
+      
+      dy = bounds.y - bounds.height
+      window.scrollBy(dx, dy)
+      return
+    case 'backward':
+      scrollForward()
+      return
+  }
 }
 
 function scroll(to) {
@@ -87,7 +113,7 @@ function scroll(to) {
   let index = 0
 
   if (typeof to == 'string') {  
-    index = anchors.indexOf(to.replace('#', ''))
+    index = scrollpage.anchors.indexOf(to.replace('#', ''))
     if (index === -1)
       throw new ScrollpageError(`No such view: ${to}!`)
   } else {
@@ -164,7 +190,6 @@ function handleWheelScroll(e) {
   let dy = e.deltaY
   
   if (dx > 10 || dy > 10) {
-    // console.log(dx, dy)
     scrollNext()
   } else if (dx < -10 || dy < -10) {
     scrollBack()
@@ -182,7 +207,7 @@ function handleTouchStart(e) {
 }
 
 function handleTouchEnd(e) {
-  // e.preventDefault()
+  e.preventDefault()
   scrollpage.prevent = false
   scrollpage.root.classList.remove('touch')
   scrollpage.touch.x = undefined
