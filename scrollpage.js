@@ -20,8 +20,8 @@ const edgeScrollBehavior = {
 }
 
 const defaults = {
-  timefunc: timefunc.bounceIn,
-  duration: 700,
+  timefunc: timefunc.inert,
+  duration: 500,
   delay: 0,
   keyScrolling: true,
   edgeScrollBehavior: edgeScrollBehavior.ignore,
@@ -38,7 +38,7 @@ const scrollpage = {
   back: scrollBack,
   scroll: scroll,
   destroy: destroy,
-  refresh: refresh,
+  redraw: draw,
   get dx() { return this.views[0].x - scrollpage.root.getBoundingClientRect().x },
   get dy() { return this.views[0].y - scrollpage.root.getBoundingClientRect().y },
   get current() { return this.views[this.currentViewIndex] },
@@ -68,7 +68,7 @@ function scrollNext() {
   
   switch (scrollpage.options.edgeScrollBehavior) {
     case 'ignore':
-      refresh()
+      draw()
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
@@ -76,7 +76,7 @@ function scrollNext() {
       
       dy = bounds.height
 
-      refresh()
+      draw()
       window.scrollBy(dx, dy)
       return
     case 'backward':
@@ -93,7 +93,7 @@ function scrollBack() {
 
   switch (scrollpage.options.edgeScrollBehavior) {
     case 'ignore':
-      refresh()
+      draw()
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
@@ -101,7 +101,7 @@ function scrollBack() {
       
       dy = bounds.y - bounds.height
 
-      refresh()
+      draw()
       window.scrollBy(dx, dy)
       return
     case 'backward':
@@ -114,16 +114,21 @@ function scroll(to) {
   if (scrollpage.prevent) return
 
   let dx = 0.0; let dy = 0.0
+  let index = undefined
 
   scrollpage.prevent = true
-  scrollpage.currentViewIndex = anchorToIndex(to)
-  to = scrollpage.views[scrollpage.currentViewIndex]
-  
-  dx = scrollpage.dx - to.x
-  dy = scrollpage.dy - to.y
 
-  console.log('delta:', dx, dy)
-  appendStyleCoords(dx, dy)
+  try {
+    index = anchorToIndex(to)
+  } catch (err) {
+    index = scrollpage.currentViewIndex
+    scrollpage.prevent = false
+    return
+  }
+
+  scrollpage.currentViewIndex = index
+
+  draw()
 
   setTimeout(() => {
     window.location.hash = scrollpage.current.anchor
@@ -131,11 +136,10 @@ function scroll(to) {
   }, scrollpage.options.duration)
 }
 
-function refresh() {
+function draw() {
   // It may need check on if isLandscape, then update dx or dy
   let dx = scrollpage.dx - scrollpage.current.x
   let dy = scrollpage.dy - scrollpage.current.y
-  console.log('Refreshing view', scrollpage.current.anchor, '...');
 
   appendStyleCoords(dx, dy)
 }
@@ -184,9 +188,16 @@ function handleKeyScroll(e) {
     case '7':case '8':case '9':
       try {
         e.preventDefault()
-        scrollpage.scroll(parseInt(key) - 1)        
-      } catch (e) {
+        console.log(key, parseInt(key) - 1);
+        
+        scrollpage.scroll(parseInt(key) - 1)
+        break
+      } catch (ex) {
+        console.log(ex);
         console.log('Key scroll navigation: slide', key, 'is not exist!')
+        break
+      } finally {
+        break; return
       }
   }
 }
@@ -232,7 +243,7 @@ function handleTouchEnd(e) {
   let f4 = (root.height + f) / 2
 
   if (scrollpage.isLandscape && vc > f1 && vc < f2) {
-    refresh()
+    draw()
     return
   } else {
     if (vc < f1) {
@@ -247,7 +258,7 @@ function handleTouchEnd(e) {
   }
   
   if (hc > f3 && hc < f4) {
-    refresh()
+    draw()
     return
   } else {
     if (hc < f3) {
@@ -288,7 +299,7 @@ function deactiveTouch() {
   scrollpage.root.classList.remove('touch')
   scrollpage.touch.x = undefined
   scrollpage.touch.y = undefined
-  refresh()
+  draw()
 }
 
 function getTouchCoords(e) {
@@ -371,7 +382,7 @@ function init(root, selector, anchors, options) {
   scrollpage.root.addEventListener('mouseleave', deactiveTouch, opts)
   scrollpage.root.addEventListener('mousemove', handleTouchMove, opts)
   scrollpage.root.addEventListener('wheel', handleWheelScroll, {passive: false})
-  window.addEventListener('resize', refresh)
+  window.addEventListener('resize', draw)
 
   return scrollpage
 }
@@ -385,7 +396,7 @@ function destroy() {
   scrollpage.root.removeEventListener('mouseleave', deactiveTouch)
   scrollpage.root.removeEventListener('mousemove', handleTouchMove)
   scrollpage.root.removeEventListener('wheel', handleWheelScroll)
-  window.removeEventListener('resize', refresh)
+  window.removeEventListener('resize', draw)
   console.log('Scrollpage has been destroyed...')
 }
 
