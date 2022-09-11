@@ -20,8 +20,8 @@ const edgeScrollBehavior = {
 }
 
 const defaults = {
-  timefunc: timefunc.ease,
-  duration: 300,
+  timefunc: timefunc.bounceIn,
+  duration: 700,
   delay: 0,
   keyScrolling: true,
   edgeScrollBehavior: edgeScrollBehavior.ignore,
@@ -288,6 +288,7 @@ function deactiveTouch() {
   scrollpage.root.classList.remove('touch')
   scrollpage.touch.x = undefined
   scrollpage.touch.y = undefined
+  refresh()
 }
 
 function getTouchCoords(e) {
