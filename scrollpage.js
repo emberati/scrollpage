@@ -31,7 +31,7 @@ const scrollpage = {
   touch: {active: false, x: undefined, y: undefined},
   prevent: false,
   views: [],
-  currentViewIndex: 0,
+  index: 0,
   forward: scrollForward,
   backward: scrollBackward,
   next: scrollNext,
@@ -41,7 +41,7 @@ const scrollpage = {
   redraw: redraw,
   get dx() { return this.views[0].x - scrollpage.root.getBoundingClientRect().x },
   get dy() { return this.views[0].y - scrollpage.root.getBoundingClientRect().y },
-  get current() { return this.views[this.currentViewIndex] },
+  get current() { return this.views[this.index] },
   get isLandscape() { return scrollpage.views[0].y === scrollpage.views[scrollpage.views.length - 1].y }
 }
 
@@ -61,8 +61,8 @@ function scrollBackward() {
 }
 
 function scrollNext() {
-  if (scrollpage.currentViewIndex < scrollpage.views.length - 1) {
-    scroll(scrollpage.currentViewIndex + 1)
+  if (scrollpage.index < scrollpage.views.length - 1) {
+    scroll(scrollpage.index + 1)
     return
   }
   
@@ -86,8 +86,8 @@ function scrollNext() {
 }
 
 function scrollBack() {
-  if (scrollpage.currentViewIndex > 0) {
-    scroll(scrollpage.currentViewIndex - 1)
+  if (scrollpage.index > 0) {
+    scroll(scrollpage.index - 1)
     return
   }
 
@@ -121,12 +121,12 @@ function scroll(to) {
   try {
     index = indexOf(to)
   } catch (err) {
-    index = scrollpage.currentViewIndex
+    index = scrollpage.index
     scrollpage.prevent = false
     return
   }
 
-  scrollpage.currentViewIndex = index
+  scrollpage.index = index
 
   redraw()
 
