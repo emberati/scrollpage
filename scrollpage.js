@@ -201,12 +201,8 @@ function handleTouchStart(e) {
 }
 
 function handleTouchEnd(e) {
-  scrollpage.touch.active = false
   e.preventDefault()
-  
-  scrollpage.root.classList.remove('touch')
-  scrollpage.touch.x = undefined
-  scrollpage.touch.y = undefined
+  deactiveTouch()
 
   const root = scrollpage.root.getBoundingClientRect()
   const current = scrollpage.current
@@ -250,6 +246,13 @@ function handleTouchMove(e) {
   scrollpage.touch.x = coords.x
   scrollpage.touch.y = coords.y
   appendStyleCoords(dx, dy)
+}
+
+function deactiveTouch() {
+  scrollpage.touch.active = false
+  scrollpage.root.classList.remove('touch')
+  scrollpage.touch.x = undefined
+  scrollpage.touch.y = undefined
 }
 
 function getTouchCoords(e) {
@@ -331,7 +334,7 @@ function init(root, selector, anchors, options) {
   scrollpage.root.addEventListener('touchmove', handleTouchMove, opts)
   scrollpage.root.addEventListener('mousedown', handleTouchStart, opts)
   scrollpage.root.addEventListener('mouseup', handleTouchEnd, opts)
-  scrollpage.root.addEventListener('mouseleave', handleTouchEnd, opts)
+  scrollpage.root.addEventListener('mouseleave', deactiveTouch, opts)
   scrollpage.root.addEventListener('mousemove', handleTouchMove, opts)
 
   scrollpage.root.addEventListener('wheel', handleWheelScroll, {passive: false})
