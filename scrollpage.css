@@ -4,6 +4,8 @@ html {
 }
 .scrollpage-outer {
   margin: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .scrollpage-outer, .view {
@@ -11,27 +13,24 @@ html {
   outline: none;
 }
 
-.scrollpage-inner {
+.scrollpage-outer .view {
+  flex-shrink: 0;
   transition-property: transform;
   transition-timing-function: var(--timefunc);
   transition-duration: var(--duration);
   transition-delay: var(--delay);
-  
+
   transform: translate(var(--dx), var(--dy));
 }
 
-.scrollpage-outer.touch .scrollpage-inner {
+.scrollpage-outer.touch .view {
   user-select: none;
   touch-action: none;
   transition: none!important;
 }
 
-.scrollpage-outer.swipe .scrollpage-inner {
-  transition: .3s!important;
-}
-
-.scrollpage-outer.landscape .scrollpage-inner {
-  display: inline-flex;
+.scrollpage-outer.landscape {
+  flex-direction: row;
 }
 
 .scrollpage-outer.fullpage,

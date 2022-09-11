@@ -71,13 +71,13 @@
 </head>
 <body>
     <div class="scrollpage-outer">
-        <div class="scrollpage-inner">
+        <!-- <div class="scrollpage-inner"> -->
             <div class="view v1">View 1</div>
             <div class="view v2">View 2</div>
             <div class="view v3">View 3</div>
             <div class="view v4">View 4</div>
             <div class="view v5">View 5</div>
-        </div>
+        <!-- </div> -->
     </div>
     <div class="buttons">
         <button click="switchLandscapeMode()">switch landscape mode</button>
@@ -96,9 +96,9 @@
                 ['view1', 'view2', 'view3', 'view4', 'view5'],
                 {
                     index: 0,
-                    duration: 1000,
+                    duration: 500,
                     deadZone: 50,
-                    timefunc: 'bounceIn'
+                    timefunc: 'inert'
                 }
             )
             let buttons = document.querySelectorAll('.buttons button')

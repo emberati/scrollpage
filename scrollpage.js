@@ -201,6 +201,7 @@ function handleWheelScroll(scp) {
 
 function handleTouchStart(scp) {
   return function(e) {
+    console.log('touch')
     if (scp.touch.active || scp.prevent) return
     scp.touch.active = true
     e.preventDefault()
@@ -412,10 +413,9 @@ function init(root, selector, anchors, options) {
   }
 
   // todo: make root subnode mandatory with checks
-  const inner = root.children[0]
   const childrens = scrollpage.selector?
-    inner.querySelectorAll('.'.concat(scrollpage.selector)) :
-    inner.children
+    root.querySelectorAll('.'.concat(scrollpage.selector)) :
+    root.children
 
   // Check if anchors and views are valid
 
