@@ -119,16 +119,8 @@ function scroll(to) {
   to = scrollpage.views[scrollpage.currentViewIndex]
   
   // #optimizescroll
-  console.log('isLandscape:', scrollpage.isLandscape)
-  console.log(
-    'first y, last y:',
-    scrollpage.views[0].y, scrollpage.views[scrollpage.views.length - 1].y
-  )
-  if (scrollpage.isLandscape) {
-    dx = scrollpage.dx - to.x
-  } else {
-    dy = scrollpage.dy - to.y
-  }
+  dx = scrollpage.dx - to.x
+  dy = scrollpage.dy - to.y
 
   console.log('delta:', dx, dy)
   appendStyleCoords(dx, dy)
@@ -225,24 +217,45 @@ function handleTouchEnd(e) {
   
   const f = 200
   let vc = current.x + current.width / 2
+  let hc = current.y + current.height / 2
+
   let f1 = (root.width - f) / 2
   let f2 = (root.width + f) / 2
+  let f3 = (root.height - f) / 2
+  let f4 = (root.height + f) / 2
 
-  if (vc > f1 && vc < f2) {
+  if (scrollpage.isLandscape && vc > f1 && vc < f2) {
     console.log('NO SCROLLING')
     scroll(scrollpage.current.index) // !!!!
     return
+  } else {
+    if (vc < f1) {
+      scrollNext()
+      return
+    }
+  
+    if (vc > f2) {
+      scrollBack()
+      return
+    }
+  }
+  
+  if (hc > f3 && hc < f4) {
+    scroll(scrollpage.current.index) // !!!!
+    return
+  } else {
+    if (hc < f3) {
+      scrollNext()
+      return
+    }
+  
+    if (hc > f4) {
+      scrollBack()
+      return
+    }
   }
 
-  if (vc < f1) {
-    scrollNext()
-    return
-  }
 
-  if (vc > f2) {
-    scrollBack()
-    return
-  }
 }
 
 function handleTouchMove(e) {
