@@ -20,12 +20,11 @@ const edgeScrollBehavior = {
 }
 
 const defaults = {
-  // horizontal: false,
   timefunc: timefunc.ease,
   duration: 300,
   delay: 0,
   keyScrolling: true,
-  edgeScrollBehavior: edgeScrollBehavior.jumpOut
+  edgeScrollBehavior: edgeScrollBehavior.jumpOut,
 }
 
 const scrollpage = {
@@ -42,6 +41,7 @@ const scrollpage = {
   get dx() { return this.views[0].x - scrollpage.root.getBoundingClientRect().x },
   get dy() { return this.views[0].y - scrollpage.root.getBoundingClientRect().y },
   get current() { return this.views[this.currentViewIndex] },
+  get isLandscape() { return scrollpage.views[0].y === scrollpage.views[scrollpage.views.length - 1].y }
 }
 
 class ScrollpageError extends Error {
@@ -119,7 +119,12 @@ function scroll(to) {
   to = scrollpage.views[scrollpage.currentViewIndex]
   
   // #optimizescroll
-  if (scrollpage.options.horizontal) {
+  console.log('isLandscape:', scrollpage.isLandscape)
+  console.log(
+    'first y, last y:',
+    scrollpage.views[0].y, scrollpage.views[scrollpage.views.length - 1].y
+  )
+  if (scrollpage.isLandscape) {
     dx = scrollpage.dx - to.x
   } else {
     dy = scrollpage.dy - to.y
@@ -248,7 +253,7 @@ function handleTouchMove(e) {
   
   if (!scrollpage.touch.x || !scrollpage.touch.y) return
 
-  if (scrollpage.options.horizontal) {
+  if (scrollpage.isLandscape) {
     dx = scrollpage.dx + (coords.x - scrollpage.touch.x)
   } else {
     dy = scrollpage.dy + (coords.y - scrollpage.touch.y)
@@ -286,7 +291,6 @@ function init(root, selector, anchors, options) {
   scrollpage.selector = selector
   scrollpage.anchors = anchors
   scrollpage.options = options ? {
-    horizontal: options.horizontal || defaults.horizontal,
     timefunc: options.timefunc || defaults.timefunc,
     duration: options.duration || defaults.duration,
     delay: options.delay || defaults.delay,
@@ -327,7 +331,6 @@ function init(root, selector, anchors, options) {
     }
   }
 
-  scrollpage.horizontal = scrollpage.views[0] === scrollpage.views[scrollpage.views.length - 1]
   scrollpage.root.style.setProperty('--duration', `${scrollpage.options.duration}ms`)
   scrollpage.root.style.setProperty('--timefunc', scrollpage.options.timefunc)
   scrollpage.root.style.setProperty('--delay', scrollpage.options.delay)
