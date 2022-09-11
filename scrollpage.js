@@ -20,6 +20,7 @@ const edgeScrollBehavior = {
 }
 
 const defaults = {
+  index: 4,
   timefunc: timefunc.inert,
   duration: 500,
   delay: 0,
@@ -94,27 +95,25 @@ function scrollBack() {
 
 function scroll(to) {
   if (this.prevent) return
-
-  let dx = 0.0; let dy = 0.0
-  let index = undefined
-
   this.prevent = true
 
   try {
-    index = this.indexOf(to)
+    let index = this.indexOf(to)
+    if (index === this.index) {
+      this.prevent = false
+      return
+    }
+    if (this.current.leave) this.current.leave()
+    this.index = index
+    this.redraw()
   } catch (err) {
-    index = this.index
     this.prevent = false
     return
   }
-
-  this.index = index
-
-  this.redraw()
-
   setTimeout(() => {
-    window.location.hash = this.current.anchor
+    if (this.current.enter) this.current.enter()
     this.prevent = false
+    window.location.hash = this.current.anchor
   }, this.options.duration)
 }
 
@@ -149,7 +148,6 @@ function indexOf(anchor) {
 function handleKeyScroll(scp) {
   return function(e) {
     let key = e.key
-    console.log(key)
     switch (key) {
       case 'ArrowDown':
       case 'ArrowRight':
@@ -316,10 +314,12 @@ function init(root, selector, anchors, options) {
   console.log('Initializing this...')
 
   const scrollpage = {
+    index: 0,
     root: root,
     selector: selector,
     anchors: anchors,
     options: options ? {
+      index: options.index || defaults.index,
       timefunc: options.timefunc || defaults.timefunc,
       duration: options.duration || defaults.duration,
       delay: options.delay || defaults.delay,
@@ -329,7 +329,6 @@ function init(root, selector, anchors, options) {
     touch: {active: false, x: undefined, y: undefined},
     prevent: false,
     views: [],
-    index: 0,
     forward: scrollForward,
     backward: scrollBackward,
     next: scrollNext,
@@ -416,6 +415,7 @@ function init(root, selector, anchors, options) {
   if (scrollpage.options.keyScrolling)
     window.addEventListener('keydown', scrollpage.handlers['keydown'])
 
+  scrollpage.scroll(scrollpage.options.index)
   return scrollpage
 }
 
