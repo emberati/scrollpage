@@ -3,24 +3,25 @@ const OUTER_DIV_CLASSNAME = 'scrollpage-outer'
 const INNER_DIV_CLASSNAME = 'scrollpage-inner'
 
 const timefunc = {
+  ease: 'ease',
+  easeIn: 'ease-in',
+  easeOut: 'ease-out',
+  easeInOut: 'ease-in-out',
+  linear: 'linear',
   inert: 'cubic-bezier(.17,.67,.83,.67)',
   bounce: 'cubic-bezier(0.68,-0.55,0.27,1.55)',
 }
 
 const defaultOptions = {
   horizontal: false,
-  timefunc: timefunc.bounce,
+  timefunc: timefunc.ease,
   duration: 1000,
   delay: 0
 }
 
 const scrollpage = {
-  root: null,
-  selector: null,
-  anchors: null,
   views: [],
   currentViewIndex: 0,
-  options: null,
   scrollNext: scrollNext,
   scrollBack: scrollBack,
   scroll: scroll,
@@ -67,7 +68,7 @@ function scroll(to) {
 
   to = scrollpage.views[to]
   
-  if (scrollpage.current === to) return
+  if (scrollpage.current === to || scrollpage.prevent) return
 
   if (scrollpage.options.horizontal) {
     dx = to.x - scrollpage.current.x
@@ -82,6 +83,7 @@ function scroll(to) {
   console.log('from', scrollpage.current.anchor, 'to', to.anchor)
   console.log(dx, dy)
 
+  scrollpage.prevent = true
   scrollpage.root.style.setProperty('--dx', `${dx}px`)
   scrollpage.root.style.setProperty('--dy', `${dy}px`)
   scrollpage.currentViewIndex = index
@@ -91,7 +93,8 @@ function scroll(to) {
     // scrollpage.root.style.setProperty('--dx', '0px')
     // scrollpage.root.style.setProperty('--dy', '0px')
     window.location.hash = scrollpage.current.anchor
-  }, scrollpage.options.duration + 50)
+    scrollpage.prevent = false
+  }, scrollpage.options.duration)
 }
 
 function createView(list, element) {
