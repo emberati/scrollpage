@@ -29,7 +29,7 @@ const defaults = {
 }
 
 const scrollpage = {
-  touch: {x: undefined, y: undefined},
+  touch: {active: false, x: undefined, y: undefined},
   prevent: false,
   views: [],
   currentViewIndex: 0,
@@ -70,10 +70,9 @@ function scrollNext() {
     case 'jumpOut':
       var dx = 0; var dy = 0
       var bounds = scrollpage.root.getBoundingClientRect()
-      if (scrollpage.options.horizontal)
-        dx = bounds.width
       
       dy = bounds.height
+      
       window.scrollBy(dx, dy)
       return
     case 'backward':
@@ -84,19 +83,19 @@ function scrollNext() {
 
 function scrollBack() {
   if (scrollpage.currentViewIndex > 0) {
-    scroll(scrollpage.currentViewIndex-1) 
+    scroll(scrollpage.currentViewIndex - 1)
     return
   }
+
   switch (scrollpage.options.edgeScrollBehavior) {
     case 'ignore':
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
       var bounds = scrollpage.root.getBoundingClientRect()
-      if (scrollpage.options.horizontal)
-        dx = bounds.x - bounds.width
       
       dy = bounds.y - bounds.height
+      
       window.scrollBy(dx, dy)
       return
     case 'backward':
@@ -106,9 +105,9 @@ function scrollBack() {
 }
 
 function scroll(to) {
-  let dx = 0.0
-  let dy = 0.0
+  if (scrollpage.prevent) return
 
+  let dx = 0.0; let dy = 0.0
   let index = 0
 
   if (typeof to == 'string') {  
@@ -123,27 +122,23 @@ function scroll(to) {
 
   to = scrollpage.views[to]
   
-  // if (scrollpage.current === to || scrollpage.prevent) return
-
   if (scrollpage.options.horizontal) {
-    dx = scrollpage.views[0].x - to.x
+    console.log(scrollpage.dx - to.x);
+    dx = scrollpage.dx - to.x
   } else {
-    dy = scrollpage.views[0].y - to.y
+    console.log(scrollpage.dy - to.y);
+    dy = scrollpage.dy - to.y
   }
 
-  dx = parseInt(dx) // ! MAY CAUSE PROBLEMS
-  dy = parseInt(dy) // ! MAY CAUSE PROBLEMS
-
-  console.log('before')
   scrollpage.prevent = true
   scrollpage.currentViewIndex = index
 
   appendStyleCoords(dx, dy)
-  
+
   setTimeout(() => {
     window.location.hash = scrollpage.current.anchor
     scrollpage.prevent = false
-    console.log('after')
+    // console.log('after')
   }, scrollpage.options.duration)
 }
 
@@ -196,10 +191,12 @@ function handleWheelScroll(e) {
 }
 
 function handleTouchStart(e) {
-  if (scrollpage.prevent) return
+  if (scrollpage.touch.active || scrollpage.prevent) return
+  scrollpage.touch.active = true
   e.preventDefault()
+
   console.log('touch start');
-  scrollpage.prevent = true
+  
   scrollpage.root.classList.add('touch')
   let coords = getTouchCoords(e)
   scrollpage.touch.x = coords.x
@@ -207,12 +204,10 @@ function handleTouchStart(e) {
 }
 
 function handleTouchEnd(e) {
-  if (!scrollpage.prevent) return
+  scrollpage.touch.active = false
   e.preventDefault()
-  console.log('touch end', e.type)
-  scrollpage.prevent = false
+  
   scrollpage.root.classList.remove('touch')
-  // scrollpage.root.classList.add('swipe')
   scrollpage.touch.x = undefined
   scrollpage.touch.y = undefined
 
@@ -226,7 +221,7 @@ function handleTouchEnd(e) {
 
   if (vc > f1 && vc < f2) {
     console.log('NO SCROLLING')
-    scroll(scrollpage.current.index)
+    scroll(scrollpage.current.index) // !!!!
     return
   }
 
@@ -242,27 +237,19 @@ function handleTouchEnd(e) {
 }
 
 function handleTouchMove(e) {
-  // console.log(scrollpage.prevent);
-  if (!scrollpage.prevent) return
-  scrollpage.prevent = true
+  if (!scrollpage.touch.active || scrollpage.prevent) return
   let dx = 0
   let dy = 0
   let coords = getTouchCoords(e)
-  // console.log(coords);
   
   if (!scrollpage.touch.x || !scrollpage.touch.y) return
-  // console.log('ends in:', e.clientX, e.clientY);
-  // console.log('ends in:', e.clientX - scrollpage.touch.x)
+
   if (scrollpage.options.horizontal) {
     dx = scrollpage.dx + (coords.x - scrollpage.touch.x)
-    // dx = scrollpage.dx + e.movementX
   } else {
     dy = scrollpage.dy + (coords.y - scrollpage.touch.y)
-    // dy = scrollpage.dy + e.movementY
-    // console.log(e.screenY - scrollpage.touch.y, e.movementY)
-    // console.log(e);
   }
-  coords = getTouchCoords(e)
+
   scrollpage.touch.x = coords.x
   scrollpage.touch.y = coords.y
   appendStyleCoords(dx, dy)
@@ -272,18 +259,17 @@ function getTouchCoords(e) {
   if (e instanceof TouchEvent) {
     if (e.touches.length > 1) return
     e = e.touches[0]
-    console.log('touch event')
+    return {x: e.screenX, y: e.screenY}
   }
 
-  // scrollpage.touch.x = e.screenX
-  // scrollpage.touch.y = e.screenY
-
-  return {x: e.screenX, y: e.screenY}
+  if (e instanceof MouseEvent) {
+    return {x: e.screenX, y: e.screenY}
+  }
 }
 
 function appendStyleCoords(dx, dy) {
-  scrollpage.root.style.setProperty('--dx', `${dx}px`)
-  scrollpage.root.style.setProperty('--dy', `${dy}px`)
+  scrollpage.root.style.setProperty('--dx', `${parseInt(dx)}px`)
+  scrollpage.root.style.setProperty('--dy', `${parseInt(dy)}px`)
 }
 
 function init(root, selector, anchors, options) {
