@@ -2,18 +2,18 @@ html {
   scroll-behavior: smooth;
   scroll-snap-type: y mandatory;
 }
-.scrollpage-outer {
+.scrollpage {
   margin: auto;
   display: flex;
   flex-direction: column;
 }
 
-.scrollpage-outer, .view {
+.scrollpage, .view {
   overflow: hidden;
   outline: none;
 }
 
-.scrollpage-outer .view {
+.scrollpage .view {
   flex-shrink: 0;
   transition-property: transform;
   transition-timing-function: var(--timefunc);
@@ -23,43 +23,43 @@ html {
   transform: translate(var(--dx), var(--dy));
 }
 
-.scrollpage-outer.touch .view {
+.scrollpage.touch .view {
   user-select: none;
   touch-action: none;
   transition: none!important;
 }
 
-.scrollpage-outer.landscape {
+.scrollpage.landscape {
   flex-direction: row;
 }
 
-.scrollpage-outer.fullpage,
-.scrollpage-outer.fullpage .view {
+.scrollpage.fullpage,
+.scrollpage.fullpage .view {
   width: 100vw;
   height: 100vh;
 }
 
 /* SLIDER MODE START */
 
-.scrollpage-outer.slider {
+.scrollpage.slider {
   overflow: initial;
 }
 
-.scrollpage-outer.slider .view {
+.scrollpage.slider .view {
   margin-bottom: 20px;
   margin-right: 0;
 }
 
-.scrollpage-outer.slider .view:last-child {
+.scrollpage.slider .view:last-child {
   margin-bottom: 0;
 }
 
-.scrollpage-outer.landscape.slider .view {
+.scrollpage.landscape.slider .view {
   margin-bottom: 0;
   margin-right: 20px;
 }
 
-.scrollpage-outer.landscape.slider .view:last-child {
+.scrollpage.landscape.slider .view:last-child {
   margin-right: 0;
 }
 /* SLIDER MODE END */

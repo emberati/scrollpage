@@ -1,6 +1,5 @@
 /* eslint-disable */
-const OUTER_DIV_CLASSNAME = 'scrollpage-outer'
-const INNER_DIV_CLASSNAME = 'scrollpage-inner'
+const OUTER_DIV_CLASSNAME = 'scrollpage'
 
 const timefunc = {
   ease: 'ease',
@@ -224,52 +223,6 @@ function handleTouchEnd(scp) {
     let vc = current.x + current.width / 2
     let hc = current.y + current.height / 2
 
-    // scp.root.style.position = 'relative'
-
-    // createMarker = (name, horiz, color) => {
-    //   const marker = document.createElement('div')
-    //   marker.style.width = horiz ? '100%' : '0'
-    //   marker.style.height = horiz ? '0' : '100%'
-    //   marker.style.position = 'absolute'
-    //   marker.style.boxShadow = '0 0 0 0.5px ' + color
-    //   marker.setAttribute('class', name)
-    //   return marker
-    // }
-
-    // setMarkerPosition = (marker, left, top) => {
-    //   marker.style.left = `${left}px`
-    //   marker.style.top = `${top}px`
-    // }
-
-    // marker = (name, horiz, color) =>  {
-    //   let marker = scp.root.querySelector('.' + name)
-    //   if (!marker) marker = createMarker(name, horiz, color)
-
-    //   return {
-    //     pos: ({left, right, top, bottom}) => {
-    //       if (left || left === 0) marker.style.left = typeof left === 'number' ? left + 'px' : left
-    //       if (right || right === 0) marker.style.right = typeof right === 'number' ? right + 'px' : right
-    //       if (top || top === 0) marker.style.top = typeof top === 'number' ? top + 'px' : top
-    //       if (bottom || bottom === 0) marker.style.bottom = typeof bottom === 'number' ? bottom + 'px' : bottom
-    //     },
-    //     self: marker
-    //   }
-    // }
-
-    // const vline = marker('vline', false, 'red').self
-    // const hline = marker('hline', true, 'green').self
-    // const fline1 = marker('fline1', false, 'blue').self
-    // const fline2 = marker('fline2', false, 'blue').self
-    // const fline3 = marker('fline3', true, 'purple').self
-    // const fline4 = marker('fline4', true, 'purple').self
-
-    // scp.root.appendChild(vline)
-    // scp.root.appendChild(hline)
-    // scp.root.appendChild(fline1)
-    // scp.root.appendChild(fline2)
-    // scp.root.appendChild(fline3)
-    // scp.root.appendChild(fline4)
-
     const dz = scp.options.deadZone
 
     let f1 = (root.width - dz) / 2
@@ -277,19 +230,8 @@ function handleTouchEnd(scp) {
     let f3 = (root.height - dz) / 2
     let f4 = (root.height + dz) / 2
 
-    // console.log(`x, dx: ${current.x}, ${scp.dx}; y, dy: ${current.y}, ${scp.dy}`);
-    // console.log(`w, h: ${current.width}, ${current.height}; diff: ${f2 - f1} of real ${dz}`)
-
-    // marker('vline').pos({left: vc, top: 0})
-    // marker('hline').pos({top: hc})
-    // marker('fline1').pos({left: f1, top: 0})
-    // marker('fline2').pos({left: f2, top: 0})
-    // marker('fline3').pos({left: 0, top: f3})
-    // marker('fline4').pos({left: 0, top: f4})
-
     if (scp.isLandscape && vc > f1 && vc < f2) {
       scp.redraw()
-      console.log('NO SCROLLING')
       return
     } else {
       if (vc < f1) {
@@ -330,8 +272,6 @@ function handleTouchMove(scp) {
     if (!scp.touch.x || !scp.touch.y) return
   
     if (scp.isLandscape) {
-      // console.log('coords.x:', coords.x, 'scp.touch.x:', scp.touch.x);
-      console.log(scp.dx, coords.x - scp.touch.x);
       dx = scp.dx + (coords.x - scp.touch.x)
     } else {
       dy = scp.dy + (coords.y - scp.touch.y)
@@ -412,10 +352,11 @@ function init(root, selector, anchors, options) {
     get isLandscape() { return this.views[0].y === this.views[this.views.length - 1].y }
   }
 
-  // todo: make root subnode mandatory with checks
   const childrens = scrollpage.selector?
     root.querySelectorAll('.'.concat(scrollpage.selector)) :
     root.children
+  
+  root.classList.add(OUTER_DIV_CLASSNAME)
 
   // Check if anchors and views are valid
 
@@ -423,7 +364,7 @@ function init(root, selector, anchors, options) {
     throw new ScrollpageError("List of anchors (element's ids) might not be empty!")
 
   if (!(childrens.length === scrollpage.anchors.length))
-    throw new ScrollpageError(`Count of anchors might be equal to \`${INNER_DIV_CLASSNAME}\` component childrens!`)
+    throw new ScrollpageError(`Count of anchors might be equal to \`${OUTER_DIV_CLASSNAME}\` component childrens!`)
 
   // Complating the formation of view objects
 
@@ -482,10 +423,7 @@ function init(root, selector, anchors, options) {
     window.addEventListener('keydown', scrollpage.handlers['keydown'])
 
   scrollpage.scroll(scrollpage.options.index)
-  // scrollpage.views.forEach(e => {
-  //   console.log(e.anchor, e.height)
-  //   console.log(scrollpage.dy);
-  // })
+
   return scrollpage
 }
 
@@ -508,6 +446,5 @@ function destroy() {
 // export default init
 
 // export {
-//   OUTER_DIV_CLASSNAME,
-//   INNER_DIV_CLASSNAME
+//   OUTER_DIV_CLASSNAME
 // }

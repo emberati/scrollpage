@@ -51,7 +51,7 @@
             border-color: black;
         }
 
-        .scrollpage-outer {
+        .scrollpage {
             height: 100vh;
             width: 100vw;
 
@@ -70,14 +70,12 @@
     </style>
 </head>
 <body>
-    <div class="scrollpage-outer">
-        <!-- <div class="scrollpage-inner"> -->
-            <div class="view v1">View 1</div>
-            <div class="view v2">View 2</div>
-            <div class="view v3">View 3</div>
-            <div class="view v4">View 4</div>
-            <div class="view v5">View 5</div>
-        <!-- </div> -->
+    <div class="scroll-element">
+        <div class="view v1">View 1</div>
+        <div class="view v2">View 2</div>
+        <div class="view v3">View 3</div>
+        <div class="view v4">View 4</div>
+        <div class="view v5">View 5</div>
     </div>
     <div class="buttons">
         <button click="switchLandscapeMode()">switch landscape mode</button>
@@ -89,7 +87,7 @@
         var scrollpage = null
         var scrollElement = null
         window.addEventListener('load', () => {
-            scrollElement = document.querySelector('.scrollpage-outer')
+            scrollElement = document.querySelector('.scroll-element')
             scrollpage = init(
                 scrollElement,
                 'view',
