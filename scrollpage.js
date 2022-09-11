@@ -378,7 +378,8 @@ function init(root, selector, anchors, options) {
   scrollpage.root.addEventListener('mousemove', handleTouchMove, opts)
   scrollpage.root.addEventListener('wheel', handleWheelScroll, {passive: false})
   window.addEventListener('resize', e => {
-    appendStyleCoords(scrollpage.dx, scrollpage.dy)
+    // appendStyleCoords(scrollpage.dx, scrollpage.dy)
+    refresh()
   })
 
   return scrollpage
