@@ -110,17 +110,21 @@ function scroll(to) {
     this.prevent = false
     return
   }
+  
   setTimeout(() => {
     if (this.current.enter) this.current.enter()
     this.prevent = false
-    window.location.hash = this.current.anchor
+    // HASH SETTING ISSUES DISPLAY BUGS
+    // window.location.hash = this.current.anchor
   }, this.options.duration)
 }
 
 function redraw() {
   // It may need check on if isLandscape, then update dx or dy
-  let dx = this.dx - this.current.x
-  let dy = this.dy - this.current.y
+  let dx = 0 // this.isLandscape ? parseInt(this.dx - this.current.x) : 0
+  let dy = !this.isLandscape ? parseInt(this.views[0].y - this.current.y) : 0
+
+  console.log('dx: ', dx, 'dy:', dy)
 
   this.appendStyleCoords(dx, dy)
 }
@@ -416,6 +420,10 @@ function init(root, selector, anchors, options) {
     window.addEventListener('keydown', scrollpage.handlers['keydown'])
 
   scrollpage.scroll(scrollpage.options.index)
+  scrollpage.views.forEach(e => {
+    console.log(e.anchor, e.height)
+    console.log(scrollpage.dy);
+  })
   return scrollpage
 }
 
