@@ -68,7 +68,6 @@ function scrollNext() {
   
   switch (scrollpage.options.edgeScrollBehavior) {
     case 'ignore':
-      // scroll(scrollpage.currentViewIndex) // can be optimized as coord diff #optimizescroll
       refresh()
       return
     case 'jumpOut':
@@ -77,7 +76,6 @@ function scrollNext() {
       
       dy = bounds.height
 
-      // scroll(scrollpage.currentViewIndex) // can be optimized as coord diff #optimizescroll
       refresh()
       window.scrollBy(dx, dy)
       return
@@ -95,7 +93,7 @@ function scrollBack() {
 
   switch (scrollpage.options.edgeScrollBehavior) {
     case 'ignore':
-      scroll(scrollpage.currentViewIndex) // can be optimized as coord diff #optimizescroll
+      refresh()
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
@@ -103,7 +101,7 @@ function scrollBack() {
       
       dy = bounds.y - bounds.height
 
-      scroll(scrollpage.currentViewIndex) // can be optimized as coord diff #optimizescroll
+      refresh()
       window.scrollBy(dx, dy)
       return
     case 'backward':
@@ -121,7 +119,6 @@ function scroll(to) {
   scrollpage.currentViewIndex = anchorToIndex(to)
   to = scrollpage.views[scrollpage.currentViewIndex]
   
-  // #optimizescroll
   dx = scrollpage.dx - to.x
   dy = scrollpage.dy - to.y
 
