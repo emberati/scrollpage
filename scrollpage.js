@@ -35,16 +35,14 @@ class ScrollpageError extends Error {
 }
 
 function scrollForward() {
-  scroll(this.views.length - 1)
+  this.scroll(this.views.length - 1)
 }
 
 function scrollBackward() {
-  scroll(0)
+  this.scroll(0)
 }
 
 function scrollNext() {
-  console.log(this.index, this.views.length - 1);
-
   if (this.index < this.views.length - 1) {
     this.scroll(this.index + 1)
     return
@@ -71,13 +69,13 @@ function scrollNext() {
 
 function scrollBack() {
   if (this.index > 0) {
-    scroll(this.index - 1)
+    this.scroll(this.index - 1)
     return
   }
 
   switch (this.options.edgeScrollBehavior) {
     case 'ignore':
-      redraw()
+      this.redraw()
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
@@ -85,11 +83,11 @@ function scrollBack() {
       
       dy = bounds.y - bounds.height
 
-      redraw()
+      this.redraw()
       window.scrollBy(dx, dy)
       return
     case 'backward':
-      scrollForward()
+      this.forward()
       return
   }
 }
@@ -148,35 +146,38 @@ function indexOf(anchor) {
   return index
 }
 
-function handleKeyScroll(e) {
-  let key = e.key
-  switch (key) {
-    case 'ArrowDown':
-    case 'ArrowRight':
-    case 'PageDown':
-      e.preventDefault()
-      this.next()
-      break
-    case 'ArrowUp':
-    case 'ArrowLeft':
-    case 'PageUp':
-      e.preventDefault()
-      this.back()
-      break
-    case 'Home':
-      e.preventDefault()
-      this.backward()
-      break
-    case 'End':
-      e.preventDefault()
-      this.forward()
-      break
-    case '1':case '2':case '3':
-    case '4':case '5':case '6':
-    case '7':case '8':case '9':
-      e.preventDefault()
-      this.scroll(parseInt(key) - 1)
-      break
+function handleKeyScroll(scp) {
+  return function(e) {
+    let key = e.key
+    console.log(key)
+    switch (key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+      case 'PageDown':
+        e.preventDefault()
+        scp.next()
+        break
+      case 'ArrowUp':
+      case 'ArrowLeft':
+      case 'PageUp':
+        e.preventDefault()
+        scp.back()
+        break
+      case 'Home':
+        e.preventDefault()
+        scp.backward()
+        break
+      case 'End':
+        e.preventDefault()
+        scp.forward()
+        break
+      case '1':case '2':case '3':
+      case '4':case '5':case '6':
+      case '7':case '8':case '9':
+        e.preventDefault()
+        scp.scroll(parseInt(key) - 1)
+        break
+    }
   }
 }
 
@@ -195,85 +196,99 @@ function handleWheelScroll(scp) {
   }
 }
 
-function handleTouchStart(e) {
-  if (this.touch.active || this.prevent) return
-  this.touch.active = true
-  e.preventDefault()
+function handleTouchStart(scp) {
+  return function(e) {
+    if (scp.touch.active || scp.prevent) return
+    scp.touch.active = true
+    e.preventDefault()
 
-  this.root.classList.add('touch')
-  let coords = getTouchCoords(e)
-  this.touch.x = coords.x
-  this.touch.y = coords.y
-}
-
-function handleTouchEnd(e) {
-  e.preventDefault()
-  deactiveTouch()
-
-  const root = this.root.getBoundingClientRect()
-  const current = this.current
-  
-  const f = 200
-  let vc = current.x + current.width / 2
-  let hc = current.y + current.height / 2
-
-  let f1 = (root.width - f) / 2
-  let f2 = (root.width + f) / 2
-  let f3 = (root.height - f) / 2
-  let f4 = (root.height + f) / 2
-
-  if (this.isLandscape && vc > f1 && vc < f2) {
-    redraw()
-    return
-  } else {
-    if (vc < f1) {
-      scrollNext()
-      return
-    }
-  
-    if (vc > f2) {
-      scrollBack()
-      return
-    }
-  }
-  
-  if (hc > f3 && hc < f4) {
-    redraw()
-    return
-  } else {
-    if (hc < f3) {
-      scrollNext()
-      return
-    }
-  
-    if (hc > f4) {
-      scrollBack()
-      return
-    }
+    scp.root.classList.add('touch')
+    let coords = getTouchCoords(e)
+    scp.touch.x = coords.x
+    scp.touch.y = coords.y
   }
 }
 
-function handleTouchMove(e) {
-  if (!this.touch.active || this.prevent) return
-  
-  let dx = 0; let dy = 0
-  let coords = getTouchCoords(e)
-  
-  if (!this.touch.x || !this.touch.y) return
+function handleTouchEnd(scp) {
+  return function(e) {
+    e.preventDefault()
+    scp.deactiveTouch()
 
-  if (this.isLandscape) {
-    dx = this.dx + (coords.x - this.touch.x)
-  } else {
-    dy = this.dy + (coords.y - this.touch.y)
+    const root = scp.root.getBoundingClientRect()
+    const current = scp.current
+    
+    const f = 200
+    let vc = current.x + current.width / 2
+    let hc = current.y + current.height / 2
+
+    let f1 = (root.width - f) / 2
+    let f2 = (root.width + f) / 2
+    let f3 = (root.height - f) / 2
+    let f4 = (root.height + f) / 2
+
+    if (scp.isLandscape && vc > f1 && vc < f2) {
+      scp.redraw()
+      return
+    } else {
+      if (vc < f1) {
+        scp.next()
+        return
+      }
+    
+      if (vc > f2) {
+        scp.back()
+        return
+      }
+    }
+
+    if (hc > f3 && hc < f4) {
+      scp.redraw()
+      return
+    } else {
+      if (hc < f3) {
+        scp.next()
+        return
+      }
+    
+      if (hc > f4) {
+        scp.back()
+        return
+      }
+    }
   }
-
-  this.touch.x = coords.x
-  this.touch.y = coords.y
-  appendStyleCoords(dx, dy)
 }
 
-function onKeyScroll(e, handler) {
-  handler(e)
+function handleTouchMove(scp) {
+  return function(e) {
+    if (!scp.touch.active || scp.prevent) return
+  
+    let dx = 0; let dy = 0
+    let coords = getTouchCoords(e)
+    
+    if (!scp.touch.x || !scp.touch.y) return
+  
+    if (scp.isLandscape) {
+      dx = scp.dx + (coords.x - scp.touch.x)
+    } else {
+      dy = scp.dy + (coords.y - scp.touch.y)
+    }
+  
+    scp.touch.x = coords.x
+    scp.touch.y = coords.y
+    scp.appendStyleCoords(dx, dy)
+  }
+}
+
+function handleTouchLeave(scp) {
+  return function() {
+    scp.deactiveTouch()
+  }
+}
+
+function handleResize(scp) {
+  return function() {
+    scp.redraw()
+  }
 }
 
 function deactiveTouch() {
@@ -281,7 +296,7 @@ function deactiveTouch() {
   this.root.classList.remove('touch')
   this.touch.x = undefined
   this.touch.y = undefined
-  redraw()
+  this.redraw()
 }
 
 function getTouchCoords(e) {
@@ -322,6 +337,7 @@ function init(root, selector, anchors, options) {
     scroll: scroll,
     indexOf: indexOf,
     appendStyleCoords: appendStyleCoords,
+    deactiveTouch: deactiveTouch,
     destroy: destroy,
     redraw: redraw,
     get dx() { return this.views[0].x - this.root.getBoundingClientRect().x },
@@ -347,15 +363,18 @@ function init(root, selector, anchors, options) {
   // Complating the formation of view objects
 
   if (scrollpage.views.length === 0) {
+    const getBoundsOf = (of) => {
+      return of.element.getBoundingClientRect()
+    }
     for (let i = 0; i < childrens.length; i++) {
-      let view = {
+      const view = {
         element: childrens[i],
         anchor: scrollpage.anchors[i],
         index: i,
-        get x() { return this.element.getBoundingClientRect().x },
-        get y() { return this.element.getBoundingClientRect().y },
-        get width() { return this.element.getBoundingClientRect().width },
-        get height() { return this.element.getBoundingClientRect().height }
+        get x() { return getBoundsOf(this).x },
+        get y() { return getBoundsOf(this).y },
+        get width() { return getBoundsOf(this).width },
+        get height() { return getBoundsOf(this).height }
       }
       view.element.classList.add('view')
       view.element.id = view.anchor
@@ -367,37 +386,52 @@ function init(root, selector, anchors, options) {
   scrollpage.root.style.setProperty('--timefunc', scrollpage.options.timefunc)
   scrollpage.root.style.setProperty('--delay', scrollpage.options.delay)
 
-  if (scrollpage.options.keyScrolling)
-    window.addEventListener('keydown', handleKeyScroll, false)
-
   let opts = {
     capture: false,
     passive: false
   }
 
-  scrollpage.root.addEventListener('touchstart', handleTouchStart, opts)
-  scrollpage.root.addEventListener('touchend', handleTouchEnd, opts)
-  scrollpage.root.addEventListener('touchmove', handleTouchMove, opts)
-  scrollpage.root.addEventListener('mousedown', handleTouchStart, opts)
-  scrollpage.root.addEventListener('mouseup', handleTouchEnd, opts)
-  scrollpage.root.addEventListener('mouseleave', deactiveTouch, opts)
-  scrollpage.root.addEventListener('mousemove', handleTouchMove, opts)
-  scrollpage.root.addEventListener('wheel', handleWheelScroll(scrollpage), {passive: false})
-  window.addEventListener('resize', redraw)
+  scrollpage.handlers = {
+    'touchstart': handleTouchStart(scrollpage),
+    'touchend': handleTouchEnd(scrollpage),
+    'touchmove': handleTouchMove(scrollpage),
+    'mousedown': handleTouchStart(scrollpage),
+    'mouseup': handleTouchEnd(scrollpage),
+    'mouseleave': handleTouchLeave(scrollpage),
+    'mousemove': handleTouchMove(scrollpage),
+    'wheel': handleWheelScroll(scrollpage),
+    'resize': handleResize(scrollpage),
+    'keydown': handleKeyScroll(scrollpage)
+  }
+
+  scrollpage.root.addEventListener('touchstart', scrollpage.handlers['touchstart'], opts)
+  scrollpage.root.addEventListener('touchend', scrollpage.handlers['touchend'], opts)
+  scrollpage.root.addEventListener('touchmove', scrollpage.handlers['touchmove'], opts)
+  scrollpage.root.addEventListener('mousedown', scrollpage.handlers['mousedown'], opts)
+  scrollpage.root.addEventListener('mouseup', scrollpage.handlers['mouseup'], opts)
+  scrollpage.root.addEventListener('mouseleave', scrollpage.handlers['mouseleave'], opts)
+  scrollpage.root.addEventListener('mousemove', scrollpage.handlers['mousemove'], opts)
+  scrollpage.root.addEventListener('wheel', scrollpage.handlers['wheel'], {passive: false})
+  window.addEventListener('resize', scrollpage.handlers['resize'])
+  if (scrollpage.options.keyScrolling)
+    window.addEventListener('keydown', scrollpage.handlers['keydown'])
 
   return scrollpage
 }
 
 function destroy() {
-  this.root.removeEventListener('touchstart', handleTouchStart)
-  this.root.removeEventListener('touchend', handleTouchEnd)
-  this.root.removeEventListener('touchmove', handleTouchMove)
-  this.root.removeEventListener('mousedown', handleTouchStart)
-  this.root.removeEventListener('mouseup', handleTouchEnd)
-  this.root.removeEventListener('mouseleave', deactiveTouch)
-  this.root.removeEventListener('mousemove', handleTouchMove)
-  this.root.removeEventListener('wheel', handleWheelScroll)
-  window.removeEventListener('resize', redraw)
+  this.root.removeEventListener('touchstart', this.handlers['touchstart'])
+  this.root.removeEventListener('touchend', this.handlers['touchend'])
+  this.root.removeEventListener('touchmove', this.handlers['touchmove'])
+  this.root.removeEventListener('mousedown', this.handlers['mousedown'])
+  this.root.removeEventListener('mouseup', this.handlers['mouseup'])
+  this.root.removeEventListener('mouseleave', this.handlers['mouseleave'])
+  this.root.removeEventListener('mousemove', this.handlers['mousemove'])
+  this.root.removeEventListener('wheel', this.handlers['wheel'])
+
+  window.removeEventListener('keydown', this.handlers['keydown'])
+  window.removeEventListener('resize', this.handlers['resize'])
+  
   console.log('Scrollpage has been destroyed...')
 }
 
