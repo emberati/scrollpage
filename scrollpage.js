@@ -190,19 +190,9 @@ function handleKeyScroll(e) {
     case '1':case '2':case '3':
     case '4':case '5':case '6':
     case '7':case '8':case '9':
-      try {
-        e.preventDefault()
-        console.log(key, parseInt(key) - 1);
-        
-        scrollpage.scroll(parseInt(key) - 1)
-        break
-      } catch (ex) {
-        console.log(ex);
-        console.log('Key scroll navigation: slide', key, 'is not exist!')
-        break
-      } finally {
-        break; return
-      }
+      e.preventDefault()
+      scrollpage.scroll(parseInt(key) - 1)
+      break
   }
 }
 
