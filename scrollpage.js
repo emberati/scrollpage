@@ -135,6 +135,7 @@ function refresh() {
   // It may need check on if isLandscape, then update dx or dy
   let dx = scrollpage.dx - scrollpage.current.x
   let dy = scrollpage.dy - scrollpage.current.y
+  console.log('Refreshing view', scrollpage.current.anchor, '...');
 
   appendStyleCoords(dx, dy)
 }
@@ -208,8 +209,6 @@ function handleTouchStart(e) {
   scrollpage.touch.active = true
   e.preventDefault()
 
-  console.log('touch start');
-  
   scrollpage.root.classList.add('touch')
   let coords = getTouchCoords(e)
   scrollpage.touch.x = coords.x
@@ -233,8 +232,6 @@ function handleTouchEnd(e) {
   let f4 = (root.height + f) / 2
 
   if (scrollpage.isLandscape && vc > f1 && vc < f2) {
-    console.log('NO SCROLLING')
-    // scroll(scrollpage.current.index) // !!!!
     refresh()
     return
   } else {
@@ -250,7 +247,6 @@ function handleTouchEnd(e) {
   }
   
   if (hc > f3 && hc < f4) {
-    // scroll(scrollpage.current.index) // !!!!
     refresh()
     return
   } else {
@@ -270,8 +266,8 @@ function handleTouchEnd(e) {
 
 function handleTouchMove(e) {
   if (!scrollpage.touch.active || scrollpage.prevent) return
-  let dx = 0
-  let dy = 0
+  
+  let dx = 0; let dy = 0
   let coords = getTouchCoords(e)
   
   if (!scrollpage.touch.x || !scrollpage.touch.y) return
@@ -374,10 +370,7 @@ function init(root, selector, anchors, options) {
   scrollpage.root.addEventListener('mouseleave', deactiveTouch, opts)
   scrollpage.root.addEventListener('mousemove', handleTouchMove, opts)
   scrollpage.root.addEventListener('wheel', handleWheelScroll, {passive: false})
-  window.addEventListener('resize', e => {
-    // appendStyleCoords(scrollpage.dx, scrollpage.dy)
-    refresh()
-  })
+  window.addEventListener('resize', refresh)
 
   return scrollpage
 }
@@ -391,6 +384,7 @@ function destroy() {
   scrollpage.root.removeEventListener('mouseleave', deactiveTouch)
   scrollpage.root.removeEventListener('mousemove', handleTouchMove)
   scrollpage.root.removeEventListener('wheel', handleWheelScroll)
+  window.removeEventListener('resize', refresh)
   console.log('Scrollpage has been destroyed...')
 }
 
