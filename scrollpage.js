@@ -27,24 +27,6 @@ const defaults = {
   edgeScrollBehavior: edgeScrollBehavior.ignore,
 }
 
-const scrollpage = {
-  touch: {active: false, x: undefined, y: undefined},
-  prevent: false,
-  views: [],
-  index: 0,
-  forward: scrollForward,
-  backward: scrollBackward,
-  next: scrollNext,
-  back: scrollBack,
-  scroll: scroll,
-  destroy: destroy,
-  redraw: redraw,
-  get dx() { return this.views[0].x - scrollpage.root.getBoundingClientRect().x },
-  get dy() { return this.views[0].y - scrollpage.root.getBoundingClientRect().y },
-  get current() { return this.views[this.index] },
-  get isLandscape() { return scrollpage.views[0].y === scrollpage.views[scrollpage.views.length - 1].y }
-}
-
 class ScrollpageError extends Error {
   constructor(message) {
     super(message)
@@ -53,7 +35,7 @@ class ScrollpageError extends Error {
 }
 
 function scrollForward() {
-  scroll(scrollpage.views.length - 1)
+  scroll(this.views.length - 1)
 }
 
 function scrollBackward() {
@@ -61,18 +43,18 @@ function scrollBackward() {
 }
 
 function scrollNext() {
-  if (scrollpage.index < scrollpage.views.length - 1) {
-    scroll(scrollpage.index + 1)
+  if (this.index < this.views.length - 1) {
+    scroll(this.index + 1)
     return
   }
   
-  switch (scrollpage.options.edgeScrollBehavior) {
+  switch (this.options.edgeScrollBehavior) {
     case 'ignore':
       redraw()
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
-      var bounds = scrollpage.root.getBoundingClientRect()
+      var bounds = this.root.getBoundingClientRect()
       
       dy = bounds.height
 
@@ -86,18 +68,18 @@ function scrollNext() {
 }
 
 function scrollBack() {
-  if (scrollpage.index > 0) {
-    scroll(scrollpage.index - 1)
+  if (this.index > 0) {
+    scroll(this.index - 1)
     return
   }
 
-  switch (scrollpage.options.edgeScrollBehavior) {
+  switch (this.options.edgeScrollBehavior) {
     case 'ignore':
       redraw()
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
-      var bounds = scrollpage.root.getBoundingClientRect()
+      var bounds = this.root.getBoundingClientRect()
       
       dy = bounds.y - bounds.height
 
@@ -111,35 +93,35 @@ function scrollBack() {
 }
 
 function scroll(to) {
-  if (scrollpage.prevent) return
+  if (this.prevent) return
 
   let dx = 0.0; let dy = 0.0
   let index = undefined
 
-  scrollpage.prevent = true
+  this.prevent = true
 
   try {
     index = indexOf(to)
   } catch (err) {
-    index = scrollpage.index
-    scrollpage.prevent = false
+    index = this.index
+    this.prevent = false
     return
   }
 
-  scrollpage.index = index
+  this.index = index
 
   redraw()
 
   setTimeout(() => {
-    window.location.hash = scrollpage.current.anchor
-    scrollpage.prevent = false
-  }, scrollpage.options.duration)
+    window.location.hash = this.current.anchor
+    this.prevent = false
+  }, this.options.duration)
 }
 
 function redraw() {
   // It may need check on if isLandscape, then update dx or dy
-  let dx = scrollpage.dx - scrollpage.current.x
-  let dy = scrollpage.dy - scrollpage.current.y
+  let dx = this.dx - this.current.x
+  let dy = this.dy - this.current.y
 
   appendStyleCoords(dx, dy)
 }
@@ -148,12 +130,12 @@ function indexOf(anchor) {
   let index = 0
   
   if (typeof anchor == 'string') {  
-    index = scrollpage.anchors.indexOf(to.replace('#', ''))
+    index = this.anchors.indexOf(to.replace('#', ''))
     if (index === -1)
       throw new ScrollpageError(`No such view: ${anchor}!`)
   } else if (typeof anchor == 'number') {
     index = anchor
-    if (!(index >= 0 && index <= scrollpage.views.length - 1))
+    if (!(index >= 0 && index <= this.views.length - 1))
       throw new ScrollpageError('Out of bounds! ' + `No such view: ${anchor}!`)
   } else {
     index = anchor.index
@@ -171,33 +153,33 @@ function handleKeyScroll(e) {
     case 'ArrowRight':
     case 'PageDown':
       e.preventDefault()
-      scrollpage.next()
+      this.next()
       break
     case 'ArrowUp':
     case 'ArrowLeft':
     case 'PageUp':
       e.preventDefault()
-      scrollpage.back()
+      this.back()
       break
     case 'Home':
       e.preventDefault()
-      scrollpage.backward()
+      this.backward()
       break
     case 'End':
       e.preventDefault()
-      scrollpage.forward()
+      this.forward()
       break
     case '1':case '2':case '3':
     case '4':case '5':case '6':
     case '7':case '8':case '9':
       e.preventDefault()
-      scrollpage.scroll(parseInt(key) - 1)
+      this.scroll(parseInt(key) - 1)
       break
   }
 }
 
 function handleWheelScroll(e) {
-  if (e.ctrlKey || scrollpage.prevent) return
+  if (e.ctrlKey || this.prevent) return
   e.preventDefault()
   let dx = e.deltaX
   let dy = e.deltaY
@@ -210,22 +192,22 @@ function handleWheelScroll(e) {
 }
 
 function handleTouchStart(e) {
-  if (scrollpage.touch.active || scrollpage.prevent) return
-  scrollpage.touch.active = true
+  if (this.touch.active || this.prevent) return
+  this.touch.active = true
   e.preventDefault()
 
-  scrollpage.root.classList.add('touch')
+  this.root.classList.add('touch')
   let coords = getTouchCoords(e)
-  scrollpage.touch.x = coords.x
-  scrollpage.touch.y = coords.y
+  this.touch.x = coords.x
+  this.touch.y = coords.y
 }
 
 function handleTouchEnd(e) {
   e.preventDefault()
   deactiveTouch()
 
-  const root = scrollpage.root.getBoundingClientRect()
-  const current = scrollpage.current
+  const root = this.root.getBoundingClientRect()
+  const current = this.current
   
   const f = 200
   let vc = current.x + current.width / 2
@@ -236,7 +218,7 @@ function handleTouchEnd(e) {
   let f3 = (root.height - f) / 2
   let f4 = (root.height + f) / 2
 
-  if (scrollpage.isLandscape && vc > f1 && vc < f2) {
+  if (this.isLandscape && vc > f1 && vc < f2) {
     redraw()
     return
   } else {
@@ -265,34 +247,36 @@ function handleTouchEnd(e) {
       return
     }
   }
-
-
 }
 
 function handleTouchMove(e) {
-  if (!scrollpage.touch.active || scrollpage.prevent) return
+  if (!this.touch.active || this.prevent) return
   
   let dx = 0; let dy = 0
   let coords = getTouchCoords(e)
   
-  if (!scrollpage.touch.x || !scrollpage.touch.y) return
+  if (!this.touch.x || !this.touch.y) return
 
-  if (scrollpage.isLandscape) {
-    dx = scrollpage.dx + (coords.x - scrollpage.touch.x)
+  if (this.isLandscape) {
+    dx = this.dx + (coords.x - this.touch.x)
   } else {
-    dy = scrollpage.dy + (coords.y - scrollpage.touch.y)
+    dy = this.dy + (coords.y - this.touch.y)
   }
 
-  scrollpage.touch.x = coords.x
-  scrollpage.touch.y = coords.y
+  this.touch.x = coords.x
+  this.touch.y = coords.y
   appendStyleCoords(dx, dy)
 }
 
+function onKeyScroll(e, handler) {
+  handler(e)
+}
+
 function deactiveTouch() {
-  scrollpage.touch.active = false
-  scrollpage.root.classList.remove('touch')
-  scrollpage.touch.x = undefined
-  scrollpage.touch.y = undefined
+  this.touch.active = false
+  this.root.classList.remove('touch')
+  this.touch.x = undefined
+  this.touch.y = undefined
   redraw()
 }
 
@@ -305,23 +289,40 @@ function getTouchCoords(e) {
 }
 
 function appendStyleCoords(dx, dy) {
-  scrollpage.root.style.setProperty('--dx', `${parseInt(dx)}px`)
-  scrollpage.root.style.setProperty('--dy', `${parseInt(dy)}px`)
+  this.root.style.setProperty('--dx', `${parseInt(dx)}px`)
+  this.root.style.setProperty('--dy', `${parseInt(dy)}px`)
 }
 
 function init(root, selector, anchors, options) {
-  console.log('Initializing Scrollpage...')
+  console.log('Initializing this...')
 
-  scrollpage.root = root
-  scrollpage.selector = selector
-  scrollpage.anchors = anchors
-  scrollpage.options = options ? {
-    timefunc: options.timefunc || defaults.timefunc,
-    duration: options.duration || defaults.duration,
-    delay: options.delay || defaults.delay,
-    keyScrolling: options.keyScrolling || defaults.keyScrolling,
-    edgeScrollBehavior: options.edgeScrollBehavior || defaults.edgeScrollBehavior
-  } : defaults
+  const scrollpage = {
+    root: root,
+    selector: selector,
+    anchors: anchors,
+    options: options ? {
+      timefunc: options.timefunc || defaults.timefunc,
+      duration: options.duration || defaults.duration,
+      delay: options.delay || defaults.delay,
+      keyScrolling: options.keyScrolling || defaults.keyScrolling,
+      edgeScrollBehavior: options.edgeScrollBehavior || defaults.edgeScrollBehavior
+    } : defaults,
+    touch: {active: false, x: undefined, y: undefined},
+    prevent: false,
+    views: [],
+    index: 0,
+    forward: scrollForward,
+    backward: scrollBackward,
+    next: scrollNext,
+    back: scrollBack,
+    scroll: scroll,
+    destroy: destroy,
+    redraw: redraw,
+    get dx() { return this.views[0].x - this.root.getBoundingClientRect().x },
+    get dy() { return this.views[0].y - this.root.getBoundingClientRect().y },
+    get current() { return this.views[this.index] },
+    get isLandscape() { return this.views[0].y === this.views[this.views.length - 1].y }
+  }
 
   // todo: make root subnode mandatory with checks
   const inner = root.children[0]
@@ -382,14 +383,14 @@ function init(root, selector, anchors, options) {
 }
 
 function destroy() {
-  scrollpage.root.removeEventListener('touchstart', handleTouchStart)
-  scrollpage.root.removeEventListener('touchend', handleTouchEnd)
-  scrollpage.root.removeEventListener('touchmove', handleTouchMove)
-  scrollpage.root.removeEventListener('mousedown', handleTouchStart)
-  scrollpage.root.removeEventListener('mouseup', handleTouchEnd)
-  scrollpage.root.removeEventListener('mouseleave', deactiveTouch)
-  scrollpage.root.removeEventListener('mousemove', handleTouchMove)
-  scrollpage.root.removeEventListener('wheel', handleWheelScroll)
+  this.root.removeEventListener('touchstart', handleTouchStart)
+  this.root.removeEventListener('touchend', handleTouchEnd)
+  this.root.removeEventListener('touchmove', handleTouchMove)
+  this.root.removeEventListener('mousedown', handleTouchStart)
+  this.root.removeEventListener('mouseup', handleTouchEnd)
+  this.root.removeEventListener('mouseleave', deactiveTouch)
+  this.root.removeEventListener('mousemove', handleTouchMove)
+  this.root.removeEventListener('wheel', handleWheelScroll)
   window.removeEventListener('resize', redraw)
   console.log('Scrollpage has been destroyed...')
 }
