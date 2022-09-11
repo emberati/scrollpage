@@ -67,13 +67,15 @@ function scrollNext() {
   
   switch (scrollpage.options.edgeScrollBehavior) {
     case 'ignore':
+      scroll(scrollpage.currentViewIndex) // can be optimized as coord diff
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
       var bounds = scrollpage.root.getBoundingClientRect()
       
       dy = bounds.height
-      
+
+      scroll(scrollpage.currentViewIndex) // can be optimized as coord diff
       window.scrollBy(dx, dy)
       return
     case 'backward':
@@ -90,13 +92,15 @@ function scrollBack() {
 
   switch (scrollpage.options.edgeScrollBehavior) {
     case 'ignore':
+      scroll(scrollpage.currentViewIndex) // can be optimized as coord diff
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
       var bounds = scrollpage.root.getBoundingClientRect()
       
       dy = bounds.y - bounds.height
-      
+
+      scroll(scrollpage.currentViewIndex) // can be optimized as coord diff
       window.scrollBy(dx, dy)
       return
     case 'backward':
@@ -109,19 +113,10 @@ function scroll(to) {
   if (scrollpage.prevent) return
 
   let dx = 0.0; let dy = 0.0
-  let index = 0
 
-  if (typeof to == 'string') {  
-    index = scrollpage.anchors.indexOf(to.replace('#', ''))
-    if (index === -1)
-      throw new ScrollpageError(`No such view: ${to}!`)
-  } else {
-    index = to
-    if (!(index >= 0 && index <= scrollpage.views.length - 1))
-      throw new ScrollpageError('Out of bounds! ' + `No such view: ${to}!`)
-  }
-
-  to = scrollpage.views[to]
+  scrollpage.prevent = true
+  scrollpage.currentViewIndex = anchorToIndex(to)
+  to = scrollpage.views[scrollpage.currentViewIndex]
   
   if (scrollpage.options.horizontal) {
     dx = scrollpage.dx - to.x
@@ -129,15 +124,29 @@ function scroll(to) {
     dy = scrollpage.dy - to.y
   }
 
-  scrollpage.prevent = true
-  scrollpage.currentViewIndex = index
-
+  console.log('delta:', dx, dy)
   appendStyleCoords(dx, dy)
 
   setTimeout(() => {
     window.location.hash = scrollpage.current.anchor
     scrollpage.prevent = false
   }, scrollpage.options.duration)
+}
+
+function anchorToIndex(anchor) {
+  let index = 0
+  
+  if (typeof anchor == 'string') {  
+    index = scrollpage.anchors.indexOf(to.replace('#', ''))
+    if (index === -1)
+      throw new ScrollpageError(`No such view: ${anchor}!`)
+  } else {
+    index = anchor
+    if (!(index >= 0 && index <= scrollpage.views.length - 1))
+      throw new ScrollpageError('Out of bounds! ' + `No such view: ${anchor}!`)
+  }
+
+  return index
 }
 
 function handleKeyScroll(e) {
@@ -260,12 +269,8 @@ function getTouchCoords(e) {
   if (e instanceof TouchEvent) {
     if (e.touches.length > 1) return
     e = e.touches[0]
-    return {x: e.screenX, y: e.screenY}
   }
-
-  if (e instanceof MouseEvent) {
-    return {x: e.screenX, y: e.screenY}
-  }
+  return {x: e.screenX, y: e.screenY}
 }
 
 function appendStyleCoords(dx, dy) {
@@ -274,7 +279,8 @@ function appendStyleCoords(dx, dy) {
 }
 
 function init(root, selector, anchors, options) {
-  console.log('Initializing Scrollpage...');
+  console.log('Initializing Scrollpage...')
+
   scrollpage.root = root
   scrollpage.selector = selector
   scrollpage.anchors = anchors
@@ -303,19 +309,21 @@ function init(root, selector, anchors, options) {
 
   // Complating the formation of view objects
 
-  for (let i = 0; i < childrens.length; i++) {
-    let view = {
-      element: childrens[i],
-      anchor: scrollpage.anchors[i],
-      index: i,
-      get x() { return this.element.getBoundingClientRect().x },
-      get y() { return this.element.getBoundingClientRect().y },
-      get width() { return this.element.getBoundingClientRect().width },
-      get height() { return this.element.getBoundingClientRect().height }
+  if (scrollpage.views.length === 0) {
+    for (let i = 0; i < childrens.length; i++) {
+      let view = {
+        element: childrens[i],
+        anchor: scrollpage.anchors[i],
+        index: i,
+        get x() { return this.element.getBoundingClientRect().x },
+        get y() { return this.element.getBoundingClientRect().y },
+        get width() { return this.element.getBoundingClientRect().width },
+        get height() { return this.element.getBoundingClientRect().height }
+      }
+      view.element.classList.add('view')
+      view.element.id = view.anchor
+      scrollpage.views.push(view)
     }
-    view.element.classList.add('view')
-    view.element.id = view.anchor
-    scrollpage.views.push(view)
   }
 
   scrollpage.root.style.setProperty('--duration', `${scrollpage.options.duration}ms`)
@@ -337,8 +345,10 @@ function init(root, selector, anchors, options) {
   scrollpage.root.addEventListener('mouseup', handleTouchEnd, opts)
   scrollpage.root.addEventListener('mouseleave', deactiveTouch, opts)
   scrollpage.root.addEventListener('mousemove', handleTouchMove, opts)
-
   scrollpage.root.addEventListener('wheel', handleWheelScroll, {passive: false})
+  window.addEventListener('resize', e => {
+    appendStyleCoords(scrollpage.dx, scrollpage.dy)
+  })
 
   return scrollpage
 }
