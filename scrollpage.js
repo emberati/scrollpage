@@ -13,12 +13,18 @@ const timefunc = {
   bounceOut: 'cubic-bezier(.5,0,.5,1.55)',
 }
 
-const defaultOptions = {
+const edgeScrollBehavior = {
+  jumpOut: 'jumpOut',
+  backward: 'backward'
+}
+
+const defaults = {
   horizontal: true,
-  timefunc: timefunc.bounceIn,
-  duration: 1000,
+  timefunc: timefunc.ease,
+  duration: 1500,
   delay: 0,
-  keyscroll: true,
+  keyScrolling: true,
+  edgeScrollBehavior: edgeScrollBehavior.jumpOut
 }
 
 const scrollpage = {
@@ -50,6 +56,22 @@ function scrollBackward() {
 function scrollNext() {
   if (scrollpage.currentViewIndex < scrollpage.views.length - 1) {
     scroll(scrollpage.currentViewIndex+1)
+    return
+  }
+
+  if (scrollpage.options.edgeScrollBehavior == 'jumpOut' && !scrollpage.prevent) {
+    let dx = 0
+    let dy = 0
+
+    if (scrollpage.options.horizontal)
+      dx = scrollpage.root.getBoundingClientRect().width
+    
+    dy = scrollpage.root.getBoundingClientRect().height
+    
+    console.log(dx, dy)
+    window.scrollBy(dx, dy)
+
+    console.log('jumping out')
   }
 }
 
@@ -87,6 +109,7 @@ function scroll(to) {
   dx = parseInt(dx)
   dy = parseInt(dy)
 
+  console.log('before')
   scrollpage.prevent = true
   scrollpage.root.style.setProperty('--dx', `${dx}px`)
   scrollpage.root.style.setProperty('--dy', `${dy}px`)
@@ -95,6 +118,7 @@ function scroll(to) {
   setTimeout(() => {
     window.location.hash = scrollpage.current.anchor
     scrollpage.prevent = false
+    console.log('after')
   }, scrollpage.options.duration)
 }
 
@@ -132,10 +156,11 @@ function wheelScrollHandle(e) {
   e.preventDefault()
   let dx = e.deltaX
   let dy = e.deltaY
-
-  if (dx > 0 || dy > 1) {
+  
+  if (dx > 10 || dy > 10) {
+    console.log(dx, dy)
     scrollNext()
-  } else if (dx < 0 || dy < -1) {
+  } else if (dx < -10 || dy < -10) {
     scrollBack()
   }
 }
@@ -146,12 +171,13 @@ function init(root, selector, anchors, options) {
   scrollpage.selector = selector
   scrollpage.anchors = anchors
   scrollpage.options = options ? {
-    horizontal: options.horizontal || defaultOptions.horizontal,
-    timefunc: options.timefunc || defaultOptions.timefunc,
-    duration: options.duration || defaultOptions.duration,
-    delay: options.delay || defaultOptions.delay,
-    keyscroll: options.keyscroll || defaultOptions.keyscroll
-  } : defaultOptions
+    horizontal: options.horizontal || defaults.horizontal,
+    timefunc: options.timefunc || defaults.timefunc,
+    duration: options.duration || defaults.duration,
+    delay: options.delay || defaults.delay,
+    keyScrolling: options.keyScrolling || defaults.keyScrolling,
+    edgeScrollBehavior: options.edgeScrollBehavior || defaults.edgeScrollBehavior
+  } : defaults
 
   // todo: make root subnode mandatory with checks
   const inner = root.children[0]
@@ -191,7 +217,7 @@ function init(root, selector, anchors, options) {
   scrollpage.root.style.setProperty('--delay', scrollpage.options.delay)
 
   // scrollpage.root.focus()
-  if (scrollpage.options.keyscroll)
+  if (scrollpage.options.keyScrolling)
     window.addEventListener('keyup', keyScrollHandle)
   scrollpage.root.addEventListener('wheel', wheelScrollHandle)
 
