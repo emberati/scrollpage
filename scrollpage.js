@@ -1,4 +1,4 @@
-
+/* eslint-disable */
 const OUTER_DIV_CLASSNAME = 'scrollpage-outer'
 const INNER_DIV_CLASSNAME = 'scrollpage-inner'
 
@@ -22,7 +22,7 @@ const edgeScrollBehavior = {
 const defaults = {
   horizontal: true,
   timefunc: timefunc.ease,
-  duration: 1500,
+  duration: 300,
   delay: 0,
   keyScrolling: true,
   edgeScrollBehavior: edgeScrollBehavior.jumpOut
@@ -60,10 +60,9 @@ function scrollBackward() {
 
 function scrollNext() {
   if (scrollpage.currentViewIndex < scrollpage.views.length - 1) {
-    scroll(scrollpage.currentViewIndex+1)
+    scroll(scrollpage.currentViewIndex + 1)
     return
   }
-  
   
   switch (scrollpage.options.edgeScrollBehavior) {
     case 'ignore':
@@ -124,7 +123,7 @@ function scroll(to) {
 
   to = scrollpage.views[to]
   
-  if (scrollpage.current === to || scrollpage.prevent) return
+  // if (scrollpage.current === to || scrollpage.prevent) return
 
   if (scrollpage.options.horizontal) {
     dx = scrollpage.views[0].x - to.x
@@ -132,8 +131,8 @@ function scroll(to) {
     dy = scrollpage.views[0].y - to.y
   }
 
-  dx = parseInt(dx)
-  dy = parseInt(dy)
+  dx = parseInt(dx) // ! MAY CAUSE PROBLEMS
+  dy = parseInt(dy) // ! MAY CAUSE PROBLEMS
 
   console.log('before')
   scrollpage.prevent = true
@@ -184,7 +183,7 @@ function handleKeyScroll(e) {
 }
 
 function handleWheelScroll(e) {
-  if (e.ctrlKey) return
+  if (e.ctrlKey || scrollpage.prevent) return
   e.preventDefault()
   let dx = e.deltaX
   let dy = e.deltaY
@@ -197,8 +196,9 @@ function handleWheelScroll(e) {
 }
 
 function handleTouchStart(e) {
-  e.preventDefault()
   if (scrollpage.prevent) return
+  e.preventDefault()
+  console.log('touch start');
   scrollpage.prevent = true
   scrollpage.root.classList.add('touch')
   let coords = getTouchCoords(e)
@@ -207,19 +207,50 @@ function handleTouchStart(e) {
 }
 
 function handleTouchEnd(e) {
+  if (!scrollpage.prevent) return
   e.preventDefault()
+  console.log('touch end', e.type)
   scrollpage.prevent = false
   scrollpage.root.classList.remove('touch')
+  // scrollpage.root.classList.add('swipe')
   scrollpage.touch.x = undefined
   scrollpage.touch.y = undefined
+
+  const root = scrollpage.root.getBoundingClientRect()
+  const current = scrollpage.current
+  
+  const f = 200
+  let vc = current.x + current.width / 2
+  let f1 = (root.width - f) / 2
+  let f2 = (root.width + f) / 2
+
+  if (vc > f1 && vc < f2) {
+    console.log('NO SCROLLING')
+    scroll(scrollpage.current.index)
+    return
+  }
+
+  if (vc < f1) {
+    scrollNext()
+    return
+  }
+
+  if (vc > f2) {
+    scrollBack()
+    return
+  }
 }
 
 function handleTouchMove(e) {
+  // console.log(scrollpage.prevent);
+  if (!scrollpage.prevent) return
+  scrollpage.prevent = true
   let dx = 0
   let dy = 0
   let coords = getTouchCoords(e)
+  // console.log(coords);
   
-  if (!scrollpage.prevent || !scrollpage.touch.x || !scrollpage.touch.y) return
+  if (!scrollpage.touch.x || !scrollpage.touch.y) return
   // console.log('ends in:', e.clientX, e.clientY);
   // console.log('ends in:', e.clientX - scrollpage.touch.x)
   if (scrollpage.options.horizontal) {
