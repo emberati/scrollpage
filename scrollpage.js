@@ -24,7 +24,7 @@ const defaults = {
   duration: 300,
   delay: 0,
   keyScrolling: true,
-  edgeScrollBehavior: edgeScrollBehavior.jumpOut,
+  edgeScrollBehavior: edgeScrollBehavior.ignore,
 }
 
 const scrollpage = {
@@ -38,6 +38,7 @@ const scrollpage = {
   back: scrollBack,
   scroll: scroll,
   destroy: destroy,
+  refresh: refresh,
   get dx() { return this.views[0].x - scrollpage.root.getBoundingClientRect().x },
   get dy() { return this.views[0].y - scrollpage.root.getBoundingClientRect().y },
   get current() { return this.views[this.currentViewIndex] },
@@ -67,7 +68,8 @@ function scrollNext() {
   
   switch (scrollpage.options.edgeScrollBehavior) {
     case 'ignore':
-      scroll(scrollpage.currentViewIndex) // can be optimized as coord diff #optimizescroll
+      // scroll(scrollpage.currentViewIndex) // can be optimized as coord diff #optimizescroll
+      refresh()
       return
     case 'jumpOut':
       var dx = 0; var dy = 0
@@ -75,7 +77,8 @@ function scrollNext() {
       
       dy = bounds.height
 
-      scroll(scrollpage.currentViewIndex) // can be optimized as coord diff #optimizescroll
+      // scroll(scrollpage.currentViewIndex) // can be optimized as coord diff #optimizescroll
+      refresh()
       window.scrollBy(dx, dy)
       return
     case 'backward':
@@ -129,6 +132,14 @@ function scroll(to) {
     window.location.hash = scrollpage.current.anchor
     scrollpage.prevent = false
   }, scrollpage.options.duration)
+}
+
+function refresh() {
+  // It may need check on if isLandscape, then update dx or dy
+  let dx = scrollpage.dx - scrollpage.current.x
+  let dy = scrollpage.dy - scrollpage.current.y
+
+  appendStyleCoords(dx, dy)
 }
 
 function anchorToIndex(anchor) {
@@ -226,7 +237,8 @@ function handleTouchEnd(e) {
 
   if (scrollpage.isLandscape && vc > f1 && vc < f2) {
     console.log('NO SCROLLING')
-    scroll(scrollpage.current.index) // !!!!
+    // scroll(scrollpage.current.index) // !!!!
+    refresh()
     return
   } else {
     if (vc < f1) {
@@ -241,7 +253,8 @@ function handleTouchEnd(e) {
   }
   
   if (hc > f3 && hc < f4) {
-    scroll(scrollpage.current.index) // !!!!
+    // scroll(scrollpage.current.index) // !!!!
+    refresh()
     return
   } else {
     if (hc < f3) {
