@@ -110,6 +110,49 @@ function createView(element) {
   return view
 }
 
+function keyScrollHandle(e) {
+  let key = e.key
+    switch (key) {
+      case 'ArrowDown':
+      case 'ArrowRight':
+      case 'PageDown':
+        scrollpage.next()
+        break
+      case 'ArrowUp':
+      case 'ArrowLeft':
+      case 'PageUp':
+        scrollpage.back()
+        break
+      case 'Home':
+        scrollpage.backward()
+        break
+      case 'End':
+        scrollpage.forward()
+        break
+      case '1':case '2':case '3':
+      case '4':case '5':case '6':
+      case '7':case '8':case '9':
+        try {
+          scrollpage.scroll(parseInt(key) - 1)        
+        } catch (e) {
+          console.log('Key scroll navigation: slide', key, 'is no exist!')
+        }
+    }
+}
+
+function wheelScrollHandle(e) {
+  e.preventDefault()
+  let dx = e.deltaX
+  let dy = e.deltaY
+
+  console.log(dy)
+  if (dx > 0 || dy > 1) {
+    scrollNext()
+  } else if (dx < 0 || dy < -1) {
+    scrollBack()
+  }
+}
+
 function init(root, selector, anchors, options) {
 
   scrollpage.root = root
@@ -120,6 +163,7 @@ function init(root, selector, anchors, options) {
     timefunc: options.timefunc || defaultOptions.timefunc,
     duration: options.duration || defaultOptions.duration,
     delay: options.delay || defaultOptions.delay,
+    keyscroll: options.keyscroll || defaultOptions.keyscroll
   } : defaultOptions
 
   // todo: make root subnode mandatory with checks
@@ -163,35 +207,10 @@ function init(root, selector, anchors, options) {
   scrollpage.root.style.setProperty('--delay', scrollpage.options.delay)
 
   // scrollpage.root.focus()
-  window.addEventListener('keyup', e => {
-    let key = e.key
-    switch (key) {
-      case 'ArrowDown':
-      case 'ArrowRight':
-      case 'PageDown':
-        scrollpage.next()
-        break
-      case 'ArrowUp':
-      case 'ArrowLeft':
-      case 'PageUp':
-        scrollpage.back()
-        break
-      case 'Home':
-        scrollpage.backward()
-        break
-      case 'End':
-        scrollpage.forward()
-        break
-      case '1':case '2':case '3':
-      case '4':case '5':case '6':
-      case '7':case '8':case '9':
-        try {
-          scrollpage.scroll(parseInt(key) - 1)        
-        } catch (e) {
-          console.log('Key scroll navigation: slide', key, 'is no exist!')
-        }
-    }
-  })
+  if (scrollpage.options.keyscroll)
+    window.addEventListener('keyup', keyScrollHandle)
+
+  scrollpage.root.children[0].addEventListener('wheel', wheelScrollHandle)
 
   return scrollpage
 }
