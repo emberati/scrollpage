@@ -2,30 +2,30 @@
 const OUTER_DIV_CLASSNAME = 'scrollpage'
 
 const timefunc = {
-  ease: 'ease',
-  easeIn: 'ease-in',
-  easeOut: 'ease-out',
-  linear: 'linear',
-  inert: 'cubic-bezier(.17,.67,.83,.67)',
-  bounce: 'cubic-bezier(.55,-.55,.55,1.55)',
-  bounceIn: 'cubic-bezier(.55,-.55,.55,1)',
-  bounceOut: 'cubic-bezier(.5,0,.5,1.55)',
+  'ease': 'ease',
+  'ease-in': 'ease-in',
+  'ease-out': 'ease-out',
+  'linear': 'linear',
+  'inert': 'cubic-bezier(.17,.67,.83,.67)',
+  'bounce': 'cubic-bezier(.55,-.55,.55,1.55)',
+  'bounce-in': 'cubic-bezier(.55,-.55,.55,1)',
+  'bounce-out': 'cubic-bezier(.5,0,.5,1.55)',
 }
 
 const edgeScrollBehavior = {
-  jumpOut: 'jumpOut',
-  backward: 'backward',
-  ignore: 'ignore'
+  'jump-out': 'jump-out',
+  'backward': 'backward',
+  'ignore': 'ignore'
 }
 
 const defaults = {
   index: 0,
   deadZone: 200,
-  timefunc: timefunc.inert,
+  timefunc: timefunc['inert'],
   duration: 500,
   delay: 0,
   keyScrolling: true,
-  edgeScrollBehavior: edgeScrollBehavior.ignore,
+  edgeScrollBehavior: edgeScrollBehavior['ignore'],
 }
 
 class ScrollpageError extends Error {
@@ -53,7 +53,7 @@ function scrollNext() {
     case 'ignore':
       this.redraw()
       return
-    case 'jumpOut':
+    case 'jump-out':
       var dx = 0; var dy = 0
       var bounds = this.root.getBoundingClientRect()
       
@@ -78,7 +78,7 @@ function scrollBack() {
     case 'ignore':
       this.redraw()
       return
-    case 'jumpOut':
+    case 'jump-out':
       var dx = 0; var dy = 0
       var bounds = this.root.getBoundingClientRect()
       
@@ -121,8 +121,8 @@ function scroll(to) {
 
 function redraw() {
   // It may need check on if isLandscape, then update dx or dy
-  let dx = this.isLandscape ? parseInt(this.views[0].x - this.current.x) : 0
-  let dy = !this.isLandscape ? parseInt(this.views[0].y - this.current.y) : 0
+  let dx = this.isLandscape ? parseInt(this.first.x - this.current.x) : 0
+  let dy = !this.isLandscape ? parseInt(this.first.y - this.current.y) : 0
 
   // console.log(`Redrawing on dx, dy ${dx}, ${dy}`)
 
@@ -152,6 +152,9 @@ function indexOf(anchor) {
 function handleKeyScroll(scp) {
   return function(e) {
     let key = e.key
+    if (scp.bounds.inside(scp.touch.x, scp.touch.y)) {
+      console.log('inside')
+    }
     switch (key) {
       case 'ArrowDown':
       case 'ArrowRight':
@@ -319,7 +322,7 @@ function init(root, selector, anchors, options) {
     options: options ? {
       index: options.index || defaults.index,
       deadZone: options.deadZone || defaults.deadZone,
-      timefunc: timefunc[options.timefunc] || defaults.timefunc,
+      timefunc: options.timefunc || defaults.timefunc,
       duration: options.duration || defaults.duration,
       delay: options.delay || defaults.delay,
       keyScrolling: options.keyScrolling || defaults.keyScrolling,
@@ -338,18 +341,35 @@ function init(root, selector, anchors, options) {
     deactiveTouch: deactiveTouch,
     destroy: destroy,
     redraw: redraw,
+    get bounds() {
+      const x1 = this.first.x
+      const y1 = this.first.y
+      const x2 = this.last.x + this.last.width
+      const y2 = this.last.y + this.last.height
+      return {
+        x: this.first.x, // redurant
+        y: this.first.y, // redurant
+        width: x2 > x1 ? x2 - x1 : x1 - x2,
+        height: y2 > y1 ? y2 - y1 : y1 - y2,
+        inside(x, y) {
+          return x > x1 && x < x2 && y > y1 && y < y2
+        }
+      }
+    },
     get dx() {
-      const firsViewRect = this.views[0].element.getBoundingClientRect()
+      const firsViewRect = this.first.element.getBoundingClientRect()
       const rootRect = this.root.getBoundingClientRect()
       return firsViewRect.x - rootRect.x + (firsViewRect.width - rootRect.width) / 2
     },
     get dy() {
-      const firsViewRect = this.views[0].element.getBoundingClientRect()
+      const firsViewRect = this.first.element.getBoundingClientRect()
       const rootRect = this.root.getBoundingClientRect()
       return firsViewRect.y - rootRect.y + (firsViewRect.height - rootRect.height) / 2
     },
     get current() { return this.views[this.index] },
-    get isLandscape() { return this.views[0].y === this.views[this.views.length - 1].y }
+    get first() { return this.views[0] },
+    get last() { return this.views[this.views.length - 1] },
+    get isLandscape() { return this.first.y === this.last.y }
   }
 
   const childrens = scrollpage.selector?

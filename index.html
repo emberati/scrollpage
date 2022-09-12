@@ -96,9 +96,11 @@
                     index: 0,
                     duration: 500,
                     deadZone: 50,
-                    timefunc: 'inert'
+                    timefunc: 'bounce-in',
+                    edgeScrollBehavior: 'backward',
                 }
             )
+            
             let buttons = document.querySelectorAll('.buttons button')
             buttons[0].onclick = switchLandscapeMode
             buttons[1].onclick = switchSliderMode
