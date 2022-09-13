@@ -152,9 +152,7 @@ function indexOf(anchor) {
 function handleKeyScroll(scp) {
   return function(e) {
     let key = e.key
-    if (scp.bounds.inside(scp.touch.x, scp.touch.y)) {
-      console.log('inside')
-    }
+    if (!scp.isPointerInside) return
     switch (key) {
       case 'ArrowDown':
       case 'ArrowRight':
@@ -286,6 +284,20 @@ function handleTouchMove(scp) {
   }
 }
 
+function handlePointerEnter(scp) {
+  return function(e) {
+    scp.touch.focus = true
+    console.log('entered...')
+  }
+}
+
+function handlePointerLeave(scp) {
+  return function(e) {
+    handleTouchEnd(scp)(e)
+    scp.touch.focus = false
+  }
+}
+
 function handleResize(scp) {
   return function() {
     scp.redraw()
@@ -369,7 +381,8 @@ function init(root, selector, anchors, options) {
     get current() { return this.views[this.index] },
     get first() { return this.views[0] },
     get last() { return this.views[this.views.length - 1] },
-    get isLandscape() { return this.first.y === this.last.y }
+    get isLandscape() { return this.first.y === this.last.y },
+    get isPointerInside() { return this.touch.focus }
   }
 
   const childrens = scrollpage.selector?
@@ -423,7 +436,8 @@ function init(root, selector, anchors, options) {
     'touchmove': handleTouchMove(scrollpage),
     'mousedown': handleTouchStart(scrollpage),
     'mouseup': handleTouchEnd(scrollpage),
-    'mouseleave': handleTouchEnd(scrollpage),
+    'mouseenter': handlePointerEnter(scrollpage),
+    'mouseleave': handlePointerLeave(scrollpage),
     'mousemove': handleTouchMove(scrollpage),
     'wheel': handleWheelScroll(scrollpage),
     'resize': handleResize(scrollpage),
@@ -435,6 +449,7 @@ function init(root, selector, anchors, options) {
   scrollpage.root.addEventListener('touchmove', scrollpage.handlers['touchmove'], opts)
   scrollpage.root.addEventListener('mousedown', scrollpage.handlers['mousedown'], opts)
   scrollpage.root.addEventListener('mouseup', scrollpage.handlers['mouseup'], opts)
+  scrollpage.root.addEventListener('mouseenter', scrollpage.handlers['mouseenter'], opts)
   scrollpage.root.addEventListener('mouseleave', scrollpage.handlers['mouseleave'], opts)
   scrollpage.root.addEventListener('mousemove', scrollpage.handlers['mousemove'], opts)
   scrollpage.root.addEventListener('wheel', scrollpage.handlers['wheel'], {passive: false})
@@ -453,6 +468,7 @@ function destroy() {
   this.root.removeEventListener('touchmove', this.handlers['touchmove'])
   this.root.removeEventListener('mousedown', this.handlers['mousedown'])
   this.root.removeEventListener('mouseup', this.handlers['mouseup'])
+  this.root.removeEventListener('mouseenter', this.handlers['mouseenter'])
   this.root.removeEventListener('mouseleave', this.handlers['mouseleave'])
   this.root.removeEventListener('mousemove', this.handlers['mousemove'])
   this.root.removeEventListener('wheel', this.handlers['wheel'])
