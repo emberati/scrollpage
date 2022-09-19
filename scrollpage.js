@@ -126,7 +126,7 @@ function redraw() {
 
   // console.log(`Redrawing on dx, dy ${dx}, ${dy}`)
 
-  this.appendStyleCoords(dx, dy)
+  this.setShift(dx, dy)
 }
 
 function indexOf(anchor) {
@@ -149,10 +149,37 @@ function indexOf(anchor) {
   return index
 }
 
+function deactiveTouch() {
+  this.touch.active = false
+  this.root.classList.remove('touch')
+  this.redraw()
+}
+
+function getTouchCoords(e) {
+  if (e instanceof TouchEvent) {
+    if (e.touches.length > 1) return
+    e = e.touches[0]
+  }
+  return {x: e.screenX, y: e.screenY}
+}
+
+function setShift(dx, dy) {
+  this.root.style.setProperty('--dx', `${parseInt(dx)}px`)
+  this.root.style.setProperty('--dy', `${parseInt(dy)}px`)
+}
+
+function setParams({timefunc, duration, delay}) {
+  if (timefunc) this.root.style.setProperty('--timefunc', `${timefunc}`)  
+  if (duration) this.root.style.setProperty('--duration', `${duration}ms`)
+  if (delay) this.root.style.setProperty('--delay', `${delay}ms`)  
+}
+
 function handleKeyScroll(scp) {
-  return function(e) {
+  return (e) => {
     let key = e.key
+    
     if (!scp.isPointerInside) return
+
     switch (key) {
       case 'ArrowDown':
       case 'ArrowRight':
@@ -185,7 +212,7 @@ function handleKeyScroll(scp) {
 }
 
 function handleWheelScroll(scp) {
-  return function(e) {
+  return (e) => {
     if (e.ctrlKey || scp.prevent) return
     e.preventDefault()
     let dx = e.deltaX
@@ -200,7 +227,7 @@ function handleWheelScroll(scp) {
 }
 
 function handleTouchStart(scp) {
-  return function(e) {
+  return (e) => {
     console.log('touch')
     if (scp.touch.active || scp.prevent) return
     scp.touch.active = true
@@ -214,7 +241,7 @@ function handleTouchStart(scp) {
 }
 
 function handleTouchEnd(scp) {
-  return function(e) {
+  return (e) => {
     e.preventDefault()
     scp.deactiveTouch()
 
@@ -264,7 +291,7 @@ function handleTouchEnd(scp) {
 }
 
 function handleTouchMove(scp) {
-  return function(e) {
+  return (e) => {
     if (!scp.touch.active || scp.prevent) return
   
     let dx = 0; let dy = 0
@@ -280,49 +307,27 @@ function handleTouchMove(scp) {
   
     scp.touch.x = coords.x
     scp.touch.y = coords.y
-    scp.appendStyleCoords(dx, dy)
+    scp.setShift(dx, dy)
   }
 }
 
 function handlePointerEnter(scp) {
-  return function(e) {
+  return (e) => {
     scp.touch.focus = true
-    console.log('entered...')
   }
 }
 
 function handlePointerLeave(scp) {
-  return function(e) {
+  return (e) => {
     handleTouchEnd(scp)(e)
     scp.touch.focus = false
   }
 }
 
 function handleResize(scp) {
-  return function() {
+  return (e) => {
     scp.redraw()
   }
-}
-
-function deactiveTouch() {
-  this.touch.active = false
-  this.root.classList.remove('touch')
-  this.touch.x = undefined
-  this.touch.y = undefined
-  this.redraw()
-}
-
-function getTouchCoords(e) {
-  if (e instanceof TouchEvent) {
-    if (e.touches.length > 1) return
-    e = e.touches[0]
-  }
-  return {x: e.screenX, y: e.screenY}
-}
-
-function appendStyleCoords(dx, dy) {
-  this.root.style.setProperty('--dx', `${parseInt(dx)}px`)
-  this.root.style.setProperty('--dy', `${parseInt(dy)}px`)
 }
 
 function init(root, selector, anchors, options) {
@@ -349,25 +354,11 @@ function init(root, selector, anchors, options) {
     back: scrollBack,
     scroll: scroll,
     indexOf: indexOf,
-    appendStyleCoords: appendStyleCoords,
+    setShift: setShift,
+    setParams: setParams,
     deactiveTouch: deactiveTouch,
     destroy: destroy,
     redraw: redraw,
-    get bounds() {
-      const x1 = this.first.x
-      const y1 = this.first.y
-      const x2 = this.last.x + this.last.width
-      const y2 = this.last.y + this.last.height
-      return {
-        x: this.first.x, // redurant
-        y: this.first.y, // redurant
-        width: x2 > x1 ? x2 - x1 : x1 - x2,
-        height: y2 > y1 ? y2 - y1 : y1 - y2,
-        inside(x, y) {
-          return x > x1 && x < x2 && y > y1 && y < y2
-        }
-      }
-    },
     get dx() {
       const firsViewRect = this.first.element.getBoundingClientRect()
       const rootRect = this.root.getBoundingClientRect()
@@ -421,9 +412,11 @@ function init(root, selector, anchors, options) {
     }
   }
 
-  scrollpage.root.style.setProperty('--duration', `${scrollpage.options.duration}ms`)
-  scrollpage.root.style.setProperty('--timefunc', scrollpage.options.timefunc)
-  scrollpage.root.style.setProperty('--delay', scrollpage.options.delay)
+  scrollpage.setParams({
+    timefunc: scrollpage.options.timefunc,
+    duration: scrollpage.options.duration,
+    delay: scrollpage.options.delay
+  })
 
   let opts = {
     capture: false,
